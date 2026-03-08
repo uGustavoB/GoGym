@@ -1,0 +1,27 @@
+type MuscleGroup {
+    id: ID!
+    name: String!
+}
+
+extend type Query {
+    muscleGroupById(id: ID!): MuscleGroup
+}
+
+input CreateMuscleGroupInput {
+    name: String!
+}
+
+input UpdateMuscleGroupInput {
+    id: ID!
+    name: String!
+}
+
+extend type Query {
+    muscleGroups: [MuscleGroup]
+}
+
+type Mutation {
+    createMuscleGroup(input: CreateMuscleGroupInput!): MuscleGroup
+    updateMuscleGroup(input: UpdateMuscleGroupInput!): MuscleGroup
+    deleteMuscleGroup(id: ID!): Boolean
+}
