@@ -1,4 +1,4 @@
-package com.ugustavob.gogym.domain.exeptions;
+package com.ugustavob.gogym.domain.exception;
 
 public class UserAlreadyExistsExeption extends RuntimeException {
     public UserAlreadyExistsExeption() {

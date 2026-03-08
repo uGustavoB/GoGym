@@ -1,6 +1,7 @@
 package com.ugustavob.gogym.application.musclegroup.usecases;
 
 import com.ugustavob.gogym.domain.entities.MuscleGroup;
+import com.ugustavob.gogym.domain.exception.MuscleGroupNotFoundExeption;
 import com.ugustavob.gogym.domain.repositories.MuscleGroupRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,6 @@ public class GetMuscleGroupByIdInteractor {
 
      public MuscleGroup execute(Long id){
          return repository.findById(id)
-                 .orElseThrow(() -> new RuntimeException("Grupo muscular não encontrado"));
+                 .orElseThrow(MuscleGroupNotFoundExeption::new);
      }
 }

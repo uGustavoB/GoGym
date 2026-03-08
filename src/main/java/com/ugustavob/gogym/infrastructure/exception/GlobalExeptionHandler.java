@@ -1,6 +1,6 @@
-package com.ugustavob.gogym.infrastructure.exeption;
+package com.ugustavob.gogym.infrastructure.exception;
 
-import com.ugustavob.gogym.domain.exeptions.UserAlreadyExistsExeption;
+import com.ugustavob.gogym.domain.exception.UserAlreadyExistsExeption;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;

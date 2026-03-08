@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 
 import java.util.List;
@@ -36,6 +37,7 @@ public class MuscleGroupController {
     }
 
     @MutationMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public MuscleGroup createMuscleGroup(
             @Valid @Argument CreateMuscleGroupRequestDTO input
     ){
@@ -43,11 +45,13 @@ public class MuscleGroupController {
     }
 
     @MutationMapping
-    public MuscleGroup updateMuscleGroup(@Argument UpdateMuscleGroupRequestDTO input) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public MuscleGroup updateMuscleGroup(@Valid @Argument UpdateMuscleGroupRequestDTO input) {
         return updateInteractor.execute(input.id(), input.name());
     }
 
     @MutationMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public Boolean deleteMuscleGroup(@Argument Long id) {
         deleteInteractor.execute(id);
         return true;

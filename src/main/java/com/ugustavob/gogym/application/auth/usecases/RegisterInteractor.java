@@ -3,7 +3,7 @@ package com.ugustavob.gogym.application.auth.usecases;
 import com.ugustavob.gogym.application.auth.dto.RegisterRequestDTO;
 import com.ugustavob.gogym.application.auth.dto.RegisterResponseDTO;
 import com.ugustavob.gogym.domain.entities.UserEntity;
-import com.ugustavob.gogym.domain.exeptions.UserAlreadyExistsExeption;
+import com.ugustavob.gogym.domain.exception.UserAlreadyExistsExeption;
 import com.ugustavob.gogym.domain.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;

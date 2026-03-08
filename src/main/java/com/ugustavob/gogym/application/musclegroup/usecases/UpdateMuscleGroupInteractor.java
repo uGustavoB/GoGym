@@ -1,6 +1,8 @@
 package com.ugustavob.gogym.application.musclegroup.usecases;
 
 import com.ugustavob.gogym.domain.entities.MuscleGroup;
+import com.ugustavob.gogym.domain.exception.ConflictException;
+import com.ugustavob.gogym.domain.exception.MuscleGroupNotFoundExeption;
 import com.ugustavob.gogym.domain.repositories.MuscleGroupRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,7 +16,7 @@ public class UpdateMuscleGroupInteractor {
 
     public MuscleGroup execute(Long id, String newName) {
         MuscleGroup muscleGroup = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Grupo muscular não encontrado."));
+                .orElseThrow(MuscleGroupNotFoundExeption::new);
 
         if (muscleGroup.getName().equalsIgnoreCase(newName)) {
             return muscleGroup;
@@ -24,7 +26,7 @@ public class UpdateMuscleGroupInteractor {
 
         if (groupWithNewName.isPresent()) {
             if (!groupWithNewName.get().getId().equals(id)) {
-                throw new RuntimeException("Já existe outro grupo muscular cadastrado com este nome.");
+                throw new ConflictException("Já existe outro grupo muscular cadastrado com este nome.");
             }
         }
 
