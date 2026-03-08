@@ -1,0 +1,36 @@
+enum EquipmentType {
+    FREE_WEIGHT
+    MACHINE
+    CABLE
+    BODY_WEIGHT
+    CARDIO
+    ACCESSORY
+}
+
+type Equipment {
+    id: ID!
+    name: String!
+    type: EquipmentType!
+}
+
+extend type Query {
+    equipments: [Equipment]
+    equipmentById(id: ID!): Equipment
+}
+
+input CreateEquipmentInput {
+    name: String!
+    type: EquipmentType!
+}
+
+input UpdateEquipmentInput {
+    id: ID!
+    name: String!
+    type: EquipmentType!
+}
+
+extend type Mutation {
+    createEquipment(input: CreateEquipmentInput!): Equipment
+    updateEquipment(input: UpdateEquipmentInput!): Equipment
+    deleteEquipment(id: ID!): Boolean
+}

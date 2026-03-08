@@ -1,6 +1,7 @@
 package com.ugustavob.gogym.infrastructure.graphql.excepion;
 
 import com.ugustavob.gogym.domain.exception.ConflictException;
+import com.ugustavob.gogym.domain.exception.EquipmentNotFoundException;
 import com.ugustavob.gogym.domain.exception.MuscleGroupNotFoundExeption;
 import graphql.GraphQLError;
 import graphql.GraphqlErrorBuilder;
@@ -24,6 +25,14 @@ public class GlobalGraphQLExceptionHandler {
 
     @GraphQlExceptionHandler(MuscleGroupNotFoundExeption.class)
     public GraphQLError handleMuscleGroupNotFoundException(MuscleGroupNotFoundExeption ex) {
+        return GraphqlErrorBuilder.newError()
+                .message(ex.getMessage())
+                .extensions(Map.of("code", "NOT_FOUND", "status", 404))
+                .build();
+    }
+
+    @GraphQlExceptionHandler(EquipmentNotFoundException.class)
+    public GraphQLError handleEquipmentNotFoundException(EquipmentNotFoundException ex) {
         return GraphqlErrorBuilder.newError()
                 .message(ex.getMessage())
                 .extensions(Map.of("code", "NOT_FOUND", "status", 404))
