@@ -3,6 +3,7 @@ package com.ugustavob.gogym.application.auth.usecases;
 import com.ugustavob.gogym.application.auth.dto.RegisterRequestDTO;
 import com.ugustavob.gogym.application.auth.dto.RegisterResponseDTO;
 import com.ugustavob.gogym.domain.entities.UserEntity;
+import com.ugustavob.gogym.domain.exeptions.UserAlreadyExistsExeption;
 import com.ugustavob.gogym.domain.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,7 +22,7 @@ public class RegisterInteractor {
 
         userRepository.findByEmail(request.email())
                 .ifPresent(user -> {
-                    throw new RuntimeException("User already exists");
+                    throw new UserAlreadyExistsExeption();
                 });
 
         UserEntity user = new UserEntity();
