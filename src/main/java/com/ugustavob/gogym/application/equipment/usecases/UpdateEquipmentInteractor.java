@@ -20,8 +20,8 @@ public class UpdateEquipmentInteractor {
                 .orElseThrow(EquipmentNotFoundException::new);
 
         if (!equipment.getName().equalsIgnoreCase(input.name())) {
-            Optional<Equipment> groupWithNewName = repository.findByNameIgnoreCase(input.name());
-            if (groupWithNewName.isPresent() && !groupWithNewName.get().getId().equals(input.id())) {
+            Optional<Equipment> equipmentWithNewName = repository.findByNameIgnoreCase(input.name());
+            if (equipmentWithNewName.isPresent() && !equipmentWithNewName.get().getId().equals(input.id())) {
                 throw new ConflictException("Já existe outro equipamento cadastrado com este nome.");
             }
         }
