@@ -1,0 +1,30 @@
+type Exercise {
+    id: ID!
+    name: String!
+    muscleGroup: MuscleGroup!
+    equipment: Equipment!
+}
+
+extend type Query {
+    exercises: [Exercise]
+    exerciseById(id: ID!): Exercise
+}
+
+input CreateExerciseInput {
+    name: String!
+    muscleGroupId: ID!
+    equipmentId: ID!
+}
+
+input UpdateExerciseInput {
+    exerciseId: ID!
+    name: String!
+    muscleGroupId: ID!
+    equipmentId: ID!
+}
+
+extend type Mutation {
+    createExercise(input: CreateExerciseInput!): Exercise
+    updateExercise(input: UpdateExerciseInput!): Exercise
+    deleteExercise(id: ID!): Boolean
+}
