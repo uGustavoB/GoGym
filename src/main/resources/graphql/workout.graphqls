@@ -1,0 +1,75 @@
+enum SetType {
+    WARM_UP
+    PREPARATION
+    WORKING
+}
+
+type PlannedSet {
+    id: ID!
+    setNumber: Int!
+    setType: SetType!
+    targetReps: String
+    rir: Int
+    restTimeSeconds: Int
+}
+
+type WorkoutExercise {
+    id: ID!
+    orderIndex: Int!
+    notes: String
+    exercise: Exercise!
+    plannedSets: [PlannedSet!]!
+}
+
+type Workout {
+    id: ID!
+    name: String!
+    orderIndex: Int!
+    workoutExercises: [WorkoutExercise!]!
+}
+
+type WorkoutProgram {
+    id: ID!
+    name: String!
+    description: String
+    startDate: String
+    isActive: Boolean
+    user: User!
+    workouts: [Workout!]!
+}
+
+extend type Query {
+    workoutProgramsByUserId(userId: ID!): [WorkoutProgram]
+}
+
+input CreatePlannedSetInput {
+    setNumber: Int!
+    setType: SetType!
+    targetReps: String
+    rir: Int
+    restTimeSeconds: Int
+}
+
+input CreateWorkoutExerciseInput {
+    exerciseId: ID!
+    orderIndex: Int!
+    notes: String
+    plannedSets: [CreatePlannedSetInput!]!
+}
+
+input CreateWorkoutInput {
+    name: String!
+    orderIndex: Int!
+    exercises: [CreateWorkoutExerciseInput!]!
+}
+
+input CreateWorkoutProgramInput {
+    name: String!
+    description: String
+    userId: ID!
+    workouts: [CreateWorkoutInput!]!
+}
+
+extend type Mutation {
+    createWorkoutProgram(input: CreateWorkoutProgramInput!): WorkoutProgram
+}
