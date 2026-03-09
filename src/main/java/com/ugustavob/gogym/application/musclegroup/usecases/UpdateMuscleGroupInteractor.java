@@ -1,5 +1,6 @@
 package com.ugustavob.gogym.application.musclegroup.usecases;
 
+import com.ugustavob.gogym.application.musclegroup.dto.UpdateMuscleGroupRequestDTO;
 import com.ugustavob.gogym.domain.entities.MuscleGroup;
 import com.ugustavob.gogym.domain.exception.ConflictException;
 import com.ugustavob.gogym.domain.exception.MuscleGroupNotFoundExeption;
@@ -14,24 +15,18 @@ import java.util.Optional;
 public class UpdateMuscleGroupInteractor {
     private final MuscleGroupRepository repository;
 
-    public MuscleGroup execute(Long id, String newName) {
-        MuscleGroup muscleGroup = repository.findById(id)
+    public MuscleGroup execute(UpdateMuscleGroupRequestDTO input) {
+        MuscleGroup muscleGroup = repository.findById(input.id())
                 .orElseThrow(MuscleGroupNotFoundExeption::new);
 
-        if (muscleGroup.getName().equalsIgnoreCase(newName)) {
-            return muscleGroup;
-        }
-
-        Optional<MuscleGroup> groupWithNewName = repository.findByNameIgnoreCase(newName);
-
-        if (groupWithNewName.isPresent()) {
-            if (!groupWithNewName.get().getId().equals(id)) {
+        if (!muscleGroup.getName().equalsIgnoreCase(input.name())) {
+            Optional<MuscleGroup> groupWithNewName = repository.findByNameIgnoreCase(input.name());
+            if (groupWithNewName.isPresent() && !groupWithNewName.get().getId().equals(input.id())) {
                 throw new ConflictException("Já existe outro grupo muscular cadastrado com este nome.");
             }
         }
 
-        // 4. Aplica a alteração e salva
-        muscleGroup.setName(newName);
+        muscleGroup.setName(input.name());
         return repository.save(muscleGroup);
     }
 }

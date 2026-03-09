@@ -47,7 +47,7 @@ public class MuscleGroupController {
     @MutationMapping
     @PreAuthorize("hasRole('ADMIN')")
     public MuscleGroup updateMuscleGroup(@Valid @Argument UpdateMuscleGroupRequestDTO input) {
-        return updateInteractor.execute(input.id(), input.name());
+        return updateInteractor.execute(input);
     }
 
     @MutationMapping
