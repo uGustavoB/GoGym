@@ -40,6 +40,7 @@ type WorkoutProgram {
 
 extend type Query {
     workoutProgramsByUserId(userId: ID!): [WorkoutProgram]
+    workoutProgramById(id: ID!): WorkoutProgram
 }
 
 input CreatePlannedSetInput {
@@ -70,6 +71,32 @@ input CreateWorkoutProgramInput {
     workouts: [CreateWorkoutInput!]!
 }
 
+input UpdateWorkoutProgramDetailsInput {
+    programId: ID!
+    name: String
+    description: String
+    isActive: Boolean
+}
+
+input UpdatePlannedSetInput {
+    setId: ID!
+    targetReps: String
+    rir: Int
+    restTimeSeconds: Int
+    setType: SetType
+}
+
 extend type Mutation {
     createWorkoutProgram(input: CreateWorkoutProgramInput!): WorkoutProgram
+
+    # Edição Granular
+    updateWorkoutProgramDetails(input: UpdateWorkoutProgramDetailsInput!): WorkoutProgram
+    updateWorkoutName(workoutId: ID!, newName: String!): Workout
+    addExerciseToWorkout(workoutId: ID!, input: CreateWorkoutExerciseInput!): WorkoutExercise
+    updatePlannedSet(input: UpdatePlannedSetInput!): PlannedSet
+
+    # Exclusões Granulares
+    deletePlannedSet(setId: ID!): Boolean
+    deleteWorkoutExercise(workoutExerciseId: ID!): Boolean
+    deleteWorkout(workoutId: ID!): Boolean
 }

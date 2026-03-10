@@ -36,7 +36,6 @@ public class CreateWorkoutProgramInteractor {
             program.getWorkouts().add(workoutFactory.create(workoutDto, program));
         });
 
-        // 4. Salva no banco
         return workoutProgramRepository.save(program);
     }
 }
