@@ -7,8 +7,11 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 public record CreateWorkoutProgramRequestDTO(
-        @NotBlank String name,
+        @NotBlank(message = "O nome do programa de treino é obrigatório")
+        String name,
         String description,
-        @NotNull Long userId,
-        @NotEmpty List<CreateWorkoutRequestDTO> workouts
+        @NotNull(message = "O ID do usuário é obrigatório")
+        Long userId,
+        @NotEmpty(message = "A lista de treinos não pode estar vazia")
+        List<CreateWorkoutRequestDTO> workouts
 ) {}

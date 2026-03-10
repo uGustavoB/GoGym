@@ -8,7 +8,11 @@ import jakarta.validation.constraints.Positive;
 import java.util.List;
 
 public record CreateWorkoutRequestDTO(
-        @NotBlank String name,
-        @NotNull @Positive Integer orderIndex,
-        @NotEmpty List<CreateWorkoutExerciseRequestDTO> exercises
+        @NotBlank(message = " O nome do treino é obrigatório")
+        String name,
+        @NotNull(message = " O índice de ordem do treino é obrigatório")
+        @Positive(message = " O índice de ordem do treino deve ser um número positivo")
+        Integer orderIndex,
+        @NotEmpty(message = " A lista de exercícios do treino não pode estar vazia")
+        List<CreateWorkoutExerciseRequestDTO> exercises
 ) {}
