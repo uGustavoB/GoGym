@@ -18,6 +18,7 @@ return new class extends Migration
             $table->timestamp('data_verificacao_email')->nullable();
             $table->string('senha');
             $table->rememberToken();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

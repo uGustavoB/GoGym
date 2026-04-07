@@ -40,12 +40,12 @@ return [
     'guards' => [
         'web' => [
             'driver' => 'session',
-            'providers' => [
-                'users' => [
-                    'driver' => 'eloquent',
-                    'model' => App\Models\Usuario::class
-                ],
-            ],
+            'provider' => 'users',
+        ],
+
+        'api' => [
+            'driver' => 'sanctum',
+            'provider' => 'users',
         ],
     ],
 
@@ -69,13 +69,8 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', User::class),
+            'model' => App\Models\Usuario::class,
         ],
-
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
     ],
 
     /*
