@@ -38,7 +38,7 @@ class PersonalController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(AtualizarPersonalRequest $requisicao, Personal $personal)
+    public function show(Personal $personal)
     {
         return new PersonalResource($personal->load('usuario'));
     }
