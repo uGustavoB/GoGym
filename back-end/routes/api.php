@@ -11,10 +11,6 @@ Route::post('login', [AutenticacaoController::class, 'entrar']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/sair', [AutenticacaoController::class, 'sair']);
 
-    Route::get('/perfil', function (\Illuminate\Http\Request $requisicao) {
-        return $requisicao->user();
-    });
-
 //  Rotas para CRUD dos personais
     Route::apiResource('personal', \App\Http\Controllers\PersonalController::class);
 });
