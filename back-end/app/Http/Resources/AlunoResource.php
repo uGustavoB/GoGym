@@ -26,18 +26,6 @@ class AlunoResource extends JsonResource
             ],
             'ativo' => $this->ativo,
             'cadastrado_em' => $this->created_at->format('Y-m-d H:i:s'),
-            'usuario' => $this->usuario,
-            'personal' => $this->whenLoaded('personais', function () {
-                return $this->personais->map(function ($personal) {
-                    return [
-                        'id' => $personal->id,
-                        'nome' => $personal->usuario->nome,
-                        'email' => $personal->usuario->email,
-                        'telefone' => $personal->usuario->telefone,
-                        'status' => $personal->pivot->status,
-                    ];
-                });
-            })
         ];
     }
 }

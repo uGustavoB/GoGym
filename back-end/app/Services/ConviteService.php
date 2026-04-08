@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Aluno;
 use App\Models\Convite;
 use Illuminate\Support\Str;
 
@@ -24,5 +25,22 @@ class ConviteService
             'token' => Str::random(60),
             'status' => 'pendente'
         ]);
+    }
+
+    public function vincularAlunoPorToken(?string $token, Aluno $aluno): void
+    {
+        if (!$token) return;
+
+        $convite = Convite::where('token', $token)
+            ->where('status', 'pendente')
+            ->first();
+
+        if ($convite) {
+            $aluno->personais()->attach($convite->personal_id, [
+                'status' => 'ativo'
+            ]);
+
+            $convite->update(['status' => 'aceito']);
+        }
     }
 }

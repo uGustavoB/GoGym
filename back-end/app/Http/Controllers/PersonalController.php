@@ -28,15 +28,6 @@ class PersonalController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
-    public function store(ArmazenarPersonalRequest $requisicao)
-    {
-        $personal = $this->servico->criar($requisicao->validated());
-        return new PersonalResource($personal);
-    }
-
-    /**
      * Display the specified resource.
      */
     public function show(Personal $personal)

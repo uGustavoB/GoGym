@@ -6,17 +6,22 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AutenticacaoController;
 
 // Rotas públicas
-Route::post('register', [AutenticacaoController::class, 'registrar']);
-Route::post('login', [AutenticacaoController::class, 'entrar']);
-
-    Route::apiResource('personal', PersonalController::class);
-    Route::apiResource('aluno', AlunoController::class);
-// Aqui vai todas as rotas protegidas, ou seja, aquelas que exigem autenticação para serem acessadas.
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/sair', [AutenticacaoController::class, 'sair']);
+Route::prefix('registrar')->group(function () {
+    Route::post('/personal', [AutenticacaoController::class, 'registrarPersonal']);
+    Route::post('/aluno', [AutenticacaoController::class, 'registrarAluno']);
+});
 
 //  Rotas para CRUD dos personais
-    Route::post('/personal/gerar-convite', [PersonalController::class, 'gerarConvite']);
+Route::apiResource('personal', PersonalController::class);
 
 //  Rotas para CRUD de alunos
+Route::apiResource('aluno', AlunoController::class);
+
+// Aqui vai todas as rotas protegidas, ou seja, aquelas que exigem autenticação para serem acessadas.
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/perfil', [AutenticacaoController::class, 'perfil']);
+    Route::post('/login', [AutenticacaoController::class, 'entrar']);
+    Route::post('/sair', [AutenticacaoController::class, 'sair']);
+
+    Route::post('/personal/gerar-convite', [PersonalController::class, 'gerarConvite']);
 });

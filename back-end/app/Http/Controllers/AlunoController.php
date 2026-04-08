@@ -27,22 +27,6 @@ class AlunoController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
-    public function store(ArmazenarAlunoRequest $requisicao)
-    {
-        $dadosValidados = $requisicao->validated();
-
-        if ($requisicao->user()) {
-            $dadosValidados['usuario_id'] = $requisicao->user()->id;
-        }
-
-        $aluno = $this->servico->criar($dadosValidados);
-
-        return new AlunoResource($aluno);
-    }
-
-    /**
      * Display the specified resource.
      */
     public function show(Aluno $aluno)

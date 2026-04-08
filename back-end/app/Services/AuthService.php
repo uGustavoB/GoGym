@@ -8,22 +8,6 @@ use Illuminate\Validation\ValidationException;
 
 class AuthService
 {
-    public function registrar(array $dados): array
-    {
-        $usuario = Usuario::create([
-            'nome' => $dados['nome'],
-            'email' => $dados['email'],
-            'senha' => Hash::make($dados['senha']),
-        ]);
-
-        $token = $usuario->createToken('token_de_acesso')->plainTextToken;
-
-        return [
-            'usuario' => $usuario,
-            'token' => $token
-        ];
-    }
-
     public function login(array $dados): array
     {
         $usuario = Usuario::where('email', $dados['email'])->first();
@@ -42,8 +26,13 @@ class AuthService
         ];
     }
 
-    public function logout($usuario)
+    public function logout(Usuario $usuario): void
     {
-        $usuario->currentAccessToken()->delete();
+        $usuario->tokens()->delete();
+    }
+
+    public function gerarToken(Usuario $usuario): string
+    {
+        return $usuario->createToken('auth_token')->plainTextToken;
     }
 }

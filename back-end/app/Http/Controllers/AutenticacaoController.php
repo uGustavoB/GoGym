@@ -3,24 +3,46 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\LoginRequest;
-use App\Http\Requests\RegistrarRequest;
+use App\Http\Requests\RegistrarAlunoRequest;
+use App\Http\Requests\RegistrarPersonalRequest;
+use App\Services\AlunoService;
 use App\Services\AuthService;
+use App\Services\PersonalService;
 use Illuminate\Http\Request;
 
 class AutenticacaoController extends Controller
 {
     private AuthService $authService;
+    protected $personalService;
+    protected $alunoService;
 
-    public function __construct(AuthService $authService)
+    public function __construct(AuthService $authService, PersonalService $personalService, AlunoService $alunoService)
     {
         $this->authService = $authService;
+        $this->personalService = $personalService;
+        $this->alunoService = $alunoService;
     }
 
-    public function registrar(RegistrarRequest $request)
+    public function registrarPersonal(RegistrarPersonalRequest $requisicao)
     {
-        $resultado = $this->authService->registrar($request->validated());
+        $resultado = $this->personalService->registrarComUsuario($requisicao->validated());
 
-        return response()->json($resultado, 201);
+        return response()->json([
+            'mensagem' => 'Personal registrado com sucesso.',
+            'dados' => $resultado['personal'],
+            'token' => $resultado['token']
+        ], 201);
+    }
+
+    public function registrarAluno(RegistrarAlunoRequest $requisicao)
+    {
+        $resultado = $this->alunoService->registrarComUsuario($requisicao->validated());
+
+        return response()->json([
+            'mensagem' => 'Aluno registrado com sucesso.',
+            'dados' => $resultado['aluno'],
+            'token' => $resultado['token']
+        ], 201);
     }
 
     public function entrar(LoginRequest $request)
@@ -36,6 +58,13 @@ class AutenticacaoController extends Controller
 
         return response()->json([
             'mensagem' => 'Desconectado com sucesso.'
+        ]);
+    }
+
+    public function perfil(Request $requisicao)
+    {
+        return response()->json([
+            'usuario' => $requisicao->user()
         ]);
     }
 }

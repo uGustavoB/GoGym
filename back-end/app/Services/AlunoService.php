@@ -2,48 +2,48 @@
 
 namespace App\Services;
 
+use App\Http\Resources\AlunoResource;
 use App\Models\Aluno;
-use App\Models\Convite;
 use Illuminate\Support\Facades\DB;
 
 class AlunoService
 {
+    public function __construct(
+        private UsuarioService $usuarioService,
+        private AuthService $authService,
+        private ConviteService $conviteService
+    ) {}
+
     public function listar()
     {
         return Aluno::with('usuario')->paginate(15);
     }
 
-    public function criar(array $dados)
+    public function registrarComUsuario(array $dados)
     {
         return DB::transaction(function () use ($dados) {
-            $tokenConvite = $dados['token_convite'] ?? null;
-            unset($dados['token_convite']);
+            // Criar usuario
+            $usuario = $this->usuarioService->criar($dados);
 
+            // Obter token de convite
+            $tokenConvite = $dados['token_convite'] ?? null;
+            unset($dados['nome'], $dados['email'], $dados['senha'], $dados['token_convite']);
+
+            // Criar aluno
+            $dados['usuario_id'] = $usuario->id;
             $aluno = Aluno::create($dados);
 
             // Vincular com personal
-            if ($tokenConvite) {
-                $this->vincularPersonal($aluno, $tokenConvite);
-            }
+            $this->conviteService->vincularAlunoPorToken($tokenConvite, $aluno);
 
-            return $aluno;
+            // Gerar token
+            $token = $this->authService->gerarToken($usuario);
+
+            return [
+                'aluno' => new AlunoResource($aluno),
+                'token' => $token
+            ];
         });
-    }
-
-    public function vincularPersonal(Aluno $aluno, string $tokenConvite)
-    {
-        $convite = Convite::where('token', $tokenConvite)
-            ->where('status', 'pendente')
-            ->first();
-
-        if ($convite) {
-            $aluno->personais()->attach($convite->personal_id, ['status' => 'ativo']);
-
-            // Invalida o convite
-            $convite->update(['status' => 'aceito']);
-        } else {
-            throw new \Exception('Token de convite inválido ou já utilizado.');
-        }
     }
 
     public function atualizar(Aluno $aluno, array $dados)
