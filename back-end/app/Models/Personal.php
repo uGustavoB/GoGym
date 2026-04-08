@@ -23,4 +23,16 @@ class Personal extends Model
     {
         return $this->belongsTo(Usuario::class, 'usuario_id');
     }
+
+    public function alunos()
+    {
+        return $this->belongsToMany(Aluno::class, 'aluno_personal')
+            ->withPivot('status')
+            ->withTimestamps();
+    }
+
+    public function convites()
+    {
+        return $this->hasMany(Convite::class);
+    }
 }

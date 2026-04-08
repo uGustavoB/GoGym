@@ -31,4 +31,11 @@ class Aluno extends Model
     {
         return $this->belongsTo(Usuario::class, 'usuario_id');
     }
+
+    public function personais()
+    {
+        return $this->belongsToMany(Personal::class, 'aluno_personal')
+            ->withPivot('status')
+            ->withTimestamps();
+    }
 }
