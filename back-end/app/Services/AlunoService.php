@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Aluno;
+use App\Models\Convite;
 use Illuminate\Support\Facades\DB;
 
 class AlunoService
@@ -15,8 +16,34 @@ class AlunoService
     public function criar(array $dados)
     {
         return DB::transaction(function () use ($dados) {
-            return Aluno::create($dados);
+            $tokenConvite = $dados['token_convite'] ?? null;
+            unset($dados['token_convite']);
+
+            $aluno = Aluno::create($dados);
+
+            // Vincular com personal
+            if ($tokenConvite) {
+                $this->vincularPersonal($aluno, $tokenConvite);
+            }
+
+            return $aluno;
         });
+    }
+
+    public function vincularPersonal(Aluno $aluno, string $tokenConvite)
+    {
+        $convite = Convite::where('token', $tokenConvite)
+            ->where('status', 'pendente')
+            ->first();
+
+        if ($convite) {
+            $aluno->personais()->attach($convite->personal_id, ['status' => 'ativo']);
+
+            // Invalida o convite
+            $convite->update(['status' => 'aceito']);
+        } else {
+            throw new \Exception('Token de convite inválido ou já utilizado.');
+        }
     }
 
     public function atualizar(Aluno $aluno, array $dados)

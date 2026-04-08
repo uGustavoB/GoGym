@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Personais\ArmazenarPersonalRequest;
 use App\Http\Requests\Personais\AtualizarPersonalRequest;
+use App\Http\Requests\Personais\GerarConviteRequest;
 use App\Http\Resources\PersonalResource;
 use App\Models\Personal;
 use App\Services\PersonalService;
@@ -59,5 +60,29 @@ class PersonalController extends Controller
     {
         $this->servico->deletar($personal);
         return response()->json(['mensagem' => 'Personal inativado com sucesso.']);
+    }
+
+    public function gerarConvite(GerarConviteRequest $requisicao)
+    {
+        $dados = $requisicao->validated();
+
+        $personalId = $this->servico
+            ->buscarPorUsuarioId($requisicao->user()->id)
+            ->first()
+            ->id;
+
+        $dados['personal_id'] = $personalId;
+
+        $convite = app(\App\Services\ConviteService::class)
+            ->gerarConvite($dados);
+
+        return response()->json([
+            'mensagem' => 'Convite gerado com sucesso.',
+            'convite' => [
+                'email' => $convite->email,
+                'token' => $convite->token,
+                'status' => $convite->status,
+            ]
+        ]);
     }
 }

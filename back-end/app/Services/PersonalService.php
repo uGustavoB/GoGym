@@ -12,6 +12,11 @@ class PersonalService
         return Personal::with('usuario')->paginate(15);
     }
 
+    public function buscarPorUsuarioId($usuario_id)
+    {
+        return Personal::with('usuario')->where('usuario_id', $usuario_id)->get();
+    }
+
     public function criar(array $dados)
     {
         return DB::transaction(function () use ($dados) {

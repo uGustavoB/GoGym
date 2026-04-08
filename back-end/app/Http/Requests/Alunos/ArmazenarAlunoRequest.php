@@ -23,13 +23,13 @@ class ArmazenarAlunoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'usuario_id' => 'required|exists:usuarios,id|unique:alunos,usuario_id',
             'telefone' => 'required|string|max:20',
             'genero' => 'nullable|string|in:masculino,feminino,nao_binario,outro,prefiro_nao_informar',
             'data_nascimento' => 'nullable|date',
             'peso' => 'nullable|numeric|min:0',
             'altura' => 'nullable|numeric|min:0',
             'ativo' => 'boolean',
+            'token_convite' => 'nullable|string',
         ];
     }
 
