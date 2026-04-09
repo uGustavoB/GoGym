@@ -16,7 +16,8 @@ class AlunoResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'usuario_id' => $this->usuario_id,
+            'nome' => $this->whenLoaded('usuario', fn() => $this->usuario->nome),
+            'email' => $this->whenLoaded('usuario', fn() => $this->usuario->email),
             'telefone' => $this->telefone,
             'genero' => $this->genero,
             'dados_fisicos' => [
@@ -24,7 +25,10 @@ class AlunoResource extends JsonResource
                 'altura' => $this->altura,
                 'data_nascimento' => $this->data_nascimento,
             ],
-            'ativo' => $this->ativo,
+            'status_vinculo' => $this->whenPivotLoaded('aluno_personal', function () {
+                return $this->pivot->status;
+            }),
+            'status_conta' => $this->ativo ? 'Ativo' : 'Inativo',
             'cadastrado_em' => $this->created_at->format('Y-m-d H:i:s'),
         ];
     }

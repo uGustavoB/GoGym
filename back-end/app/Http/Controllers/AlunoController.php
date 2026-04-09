@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\Alunos\ArmazenarAlunoRequest;
 use App\Http\Requests\Alunos\AtualizarAlunoRequest;
 use App\Http\Resources\AlunoResource;
 use App\Models\Aluno;
 use App\Services\AlunoService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class AlunoController extends Controller
 {
@@ -20,9 +21,9 @@ class AlunoController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $requisicao)
     {
-        $alunos = $this->servico->listar();
+        $alunos = $this->servico->listar($requisicao->user());
         return AlunoResource::collection($alunos);
     }
 
@@ -31,6 +32,8 @@ class AlunoController extends Controller
      */
     public function show(Aluno $aluno)
     {
+        Gate::authorize('view', $aluno);
+
         return new AlunoResource($aluno->load('usuario'));
     }
 

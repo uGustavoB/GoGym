@@ -14,9 +14,23 @@ class AlunoService
         private ConviteService $conviteService
     ) {}
 
-    public function listar()
+    public function listar($usuarioLogado)
     {
-        return Aluno::with('usuario')->paginate(15);
+        $personal = $usuarioLogado->personal;
+
+        // Se for personal, retornar apenas alunos dele.
+        if ($personal) {
+            return $personal->alunos()->with('usuario')->paginate(15);
+        }
+
+        // Se for aluno, retornar apenas ele mesmo.
+        $aluno = $usuarioLogado->aluno;
+        if ($aluno) {
+            return Aluno::where('id', $aluno->id)->with('usuario')->paginate(15);
+        }
+
+        // Retorna vazio caso o usuário não tenha perfil
+        return Aluno::whereRaw('1 = 0')->paginate(1);
     }
 
     public function registrarComUsuario(array $dados)

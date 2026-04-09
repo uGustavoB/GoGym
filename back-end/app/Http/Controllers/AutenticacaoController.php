@@ -8,6 +8,7 @@ use App\Http\Requests\RegistrarPersonalRequest;
 use App\Services\AlunoService;
 use App\Services\AuthService;
 use App\Services\PersonalService;
+use App\Services\UsuarioService;
 use Illuminate\Http\Request;
 
 class AutenticacaoController extends Controller
@@ -15,12 +16,14 @@ class AutenticacaoController extends Controller
     private AuthService $authService;
     protected $personalService;
     protected $alunoService;
+    protected $usuarioService;
 
-    public function __construct(AuthService $authService, PersonalService $personalService, AlunoService $alunoService)
+    public function __construct(AuthService $authService, PersonalService $personalService, AlunoService $alunoService, UsuarioService $usuarioService)
     {
         $this->authService = $authService;
         $this->personalService = $personalService;
         $this->alunoService = $alunoService;
+        $this->usuarioService = $usuarioService;
     }
 
     public function registrarPersonal(RegistrarPersonalRequest $requisicao)
@@ -63,8 +66,6 @@ class AutenticacaoController extends Controller
 
     public function perfil(Request $requisicao)
     {
-        return response()->json([
-            'usuario' => $requisicao->user()
-        ]);
+        return $this->usuarioService->obterUsuarioLogado($requisicao);
     }
 }

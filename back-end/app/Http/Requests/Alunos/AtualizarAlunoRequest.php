@@ -12,7 +12,9 @@ class AtualizarAlunoRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $aluno = $this->route('aluno');
+
+        return $this->user()->can('update', $aluno);
     }
 
     /**

@@ -37,4 +37,14 @@ class Usuario extends Authenticatable
     {
         return 'senha';
     }
+
+    public function personal()
+    {
+        return $this->hasOne(Personal::class);
+    }
+
+    public function aluno()
+    {
+        return $this->hasOne(Aluno::class);
+    }
 }
