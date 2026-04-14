@@ -24,7 +24,6 @@ class AlunoPolicy
             return true;
         }
 
-        // 2. Um personal só pode ver SE o aluno estiver na carteira dele (Tabela Pivô)
         if ($usuario->personal) {
             return $usuario->personal->alunos()->where('aluno_id', $aluno->id)->exists();
         }

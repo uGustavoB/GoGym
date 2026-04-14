@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Usuario;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 
@@ -10,11 +11,15 @@ class UsuarioService
 {
     public function criar(array $dados): Usuario
     {
-        return Usuario::create([
+        $usuario =  Usuario::create([
             'nome' => $dados['nome'],
             'email' => $dados['email'],
             'senha' => Hash::make($dados['senha']),
         ]);
+
+        event(new Registered($usuario));
+
+        return $usuario;
     }
 
     public function obterUsuarioLogado(Request $requisicao): array
@@ -26,6 +31,7 @@ class UsuarioService
                 'id' => $usuario->id,
                 'nome' => $usuario->nome,
                 'email' => $usuario->email,
+                'email_verificado' => $usuario->hasVerifiedEmail(),
             ],
             'tipo_perfil' => $usuario->personal
                 ? 'personal'
