@@ -126,6 +126,13 @@
       <path value="$PROJECT_DIR$/back-end/vendor/composer" />
       <path value="$PROJECT_DIR$/back-end/vendor/predis/predis" />
       <path value="$PROJECT_DIR$/back-end/vendor/laravel/sanctum" />
+      <path value="$PROJECT_DIR$/back-end/vendor/symfony/yaml" />
+      <path value="$PROJECT_DIR$/back-end/vendor/radebatz/type-info-extras" />
+      <path value="$PROJECT_DIR$/back-end/vendor/phpstan/phpdoc-parser" />
+      <path value="$PROJECT_DIR$/back-end/vendor/darkaonline/l5-swagger" />
+      <path value="$PROJECT_DIR$/back-end/vendor/swagger-api/swagger-ui" />
+      <path value="$PROJECT_DIR$/back-end/vendor/zircote/swagger-php" />
+      <path value="$PROJECT_DIR$/back-end/vendor/symfony/type-info" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.4">

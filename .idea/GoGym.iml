@@ -115,6 +115,13 @@
       <excludeFolder url="file://$MODULE_DIR$/back-end/vendor/vlucas/phpdotenv" />
       <excludeFolder url="file://$MODULE_DIR$/back-end/vendor/voku/portable-ascii" />
       <excludeFolder url="file://$MODULE_DIR$/back-end/vendor/laravel/sanctum" />
+      <excludeFolder url="file://$MODULE_DIR$/back-end/vendor/darkaonline/l5-swagger" />
+      <excludeFolder url="file://$MODULE_DIR$/back-end/vendor/phpstan/phpdoc-parser" />
+      <excludeFolder url="file://$MODULE_DIR$/back-end/vendor/radebatz/type-info-extras" />
+      <excludeFolder url="file://$MODULE_DIR$/back-end/vendor/swagger-api/swagger-ui" />
+      <excludeFolder url="file://$MODULE_DIR$/back-end/vendor/symfony/type-info" />
+      <excludeFolder url="file://$MODULE_DIR$/back-end/vendor/symfony/yaml" />
+      <excludeFolder url="file://$MODULE_DIR$/back-end/vendor/zircote/swagger-php" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -1,0 +1,1632 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "GoGym API",
+        "description": "API REST para gerenciamento de academias, personal trainers e alunos. Permite registro de usuários (personal e aluno), autenticação via token (Sanctum), verificação de e-mail, CRUD completo de personais e alunos, e sistema de convites para vinculação entre personal e aluno.",
+        "contact": {
+            "name": "Gustavo",
+            "email": "nao-responda@ugustavodev.com.br"
+        },
+        "license": {
+            "name": "Proprietária",
+            "url": "https://ugustavodev.com.br"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:84/api",
+            "description": "Servidor de Desenvolvimento"
+        }
+    ],
+    "paths": {
+        "/aluno": {
+            "get": {
+                "tags": [
+                    "Alunos"
+                ],
+                "summary": "Listar alunos",
+                "description": "Retorna uma lista paginada de alunos. Se o usuário autenticado for um personal, retorna apenas seus alunos vinculados. Se for um aluno, retorna apenas seus próprios dados. Requer autenticação e e-mail verificado.",
+                "operationId": "listarAlunos",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Número da página",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de alunos retornada com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/AlunoResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "$ref": "#/components/schemas/PaginacaoLinks"
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PaginacaoMeta"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutenticado"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "E-mail não verificado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutorizado"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/aluno/{aluno}": {
+            "get": {
+                "tags": [
+                    "Alunos"
+                ],
+                "summary": "Exibir um aluno específico",
+                "description": "Retorna os dados detalhados de um aluno pelo seu ID. O acesso é controlado por policy (apenas o próprio aluno ou o personal vinculado pode visualizar). Requer autenticação e e-mail verificado.",
+                "operationId": "exibirAluno",
+                "parameters": [
+                    {
+                        "name": "aluno",
+                        "in": "path",
+                        "description": "ID do aluno",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dados do aluno retornados com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AlunoResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutenticado"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Não autorizado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutorizado"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aluno não encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoEncontrado"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Alunos"
+                ],
+                "summary": "Atualizar dados de um aluno",
+                "description": "Atualiza parcialmente os dados de um aluno. Todos os campos são opcionais. Autorização é controlada por policy. Requer autenticação e e-mail verificado.",
+                "operationId": "atualizarAluno",
+                "parameters": [
+                    {
+                        "name": "aluno",
+                        "in": "path",
+                        "description": "ID do aluno",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Campos a serem atualizados",
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "telefone": {
+                                        "type": "string",
+                                        "example": "(11) 96666-6666",
+                                        "maxLength": 20
+                                    },
+                                    "genero": {
+                                        "type": "string",
+                                        "example": "feminino",
+                                        "nullable": true,
+                                        "enum": [
+                                            "masculino",
+                                            "feminino",
+                                            "nao_binario",
+                                            "outro",
+                                            "prefiro_nao_informar"
+                                        ]
+                                    },
+                                    "data_nascimento": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "1998-05-20",
+                                        "nullable": true
+                                    },
+                                    "peso": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 70,
+                                        "nullable": true
+                                    },
+                                    "altura": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 1.75,
+                                        "nullable": true
+                                    },
+                                    "ativo": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Aluno atualizado com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AlunoResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutenticado"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Não autorizado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutorizado"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aluno não encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoEncontrado"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erro de validação",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroValidacao"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Alunos"
+                ],
+                "summary": "Inativar um aluno",
+                "description": "Marca o aluno como inativo e realiza soft delete. Requer autenticação e e-mail verificado.",
+                "operationId": "deletarAluno",
+                "parameters": [
+                    {
+                        "name": "aluno",
+                        "in": "path",
+                        "description": "ID do aluno",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Aluno inativado com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "Aluno inativado com sucesso."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutenticado"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aluno não encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoEncontrado"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/registrar/personal": {
+            "post": {
+                "tags": [
+                    "Autenticação"
+                ],
+                "summary": "Registrar um novo Personal Trainer",
+                "description": "Cria um novo usuário com perfil de personal trainer. Um e-mail de verificação será enviado automaticamente via fila Redis.",
+                "operationId": "registrarPersonal",
+                "requestBody": {
+                    "description": "Dados para registro do personal",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nome",
+                                    "email",
+                                    "senha",
+                                    "telefone",
+                                    "genero"
+                                ],
+                                "properties": {
+                                    "nome": {
+                                        "type": "string",
+                                        "example": "Carlos Silva",
+                                        "maxLength": 255
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "carlos@email.com",
+                                        "maxLength": 255
+                                    },
+                                    "senha": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "senha123",
+                                        "minLength": 4
+                                    },
+                                    "telefone": {
+                                        "type": "string",
+                                        "example": "(11) 99999-9999",
+                                        "maxLength": 20
+                                    },
+                                    "genero": {
+                                        "type": "string",
+                                        "example": "masculino",
+                                        "enum": [
+                                            "masculino",
+                                            "feminino",
+                                            "nao_binario",
+                                            "outro",
+                                            "prefiro_nao_informar"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Personal registrado com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "Personal registrado com sucesso."
+                                        },
+                                        "dados": {
+                                            "$ref": "#/components/schemas/PersonalResource"
+                                        },
+                                        "token": {
+                                            "type": "string",
+                                            "example": "1|abc123def456..."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erro de validação",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroValidacao"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/registrar/aluno": {
+            "post": {
+                "tags": [
+                    "Autenticação"
+                ],
+                "summary": "Registrar um novo Aluno",
+                "description": "Cria um novo usuário com perfil de aluno. Opcionalmente, pode ser vinculado a um personal trainer através de um token de convite. Um e-mail de verificação será enviado automaticamente via fila Redis.",
+                "operationId": "registrarAluno",
+                "requestBody": {
+                    "description": "Dados para registro do aluno",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nome",
+                                    "email",
+                                    "senha",
+                                    "telefone"
+                                ],
+                                "properties": {
+                                    "nome": {
+                                        "type": "string",
+                                        "example": "João Silva",
+                                        "maxLength": 255
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "joao@email.com",
+                                        "maxLength": 255
+                                    },
+                                    "senha": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "senha123",
+                                        "minLength": 4
+                                    },
+                                    "telefone": {
+                                        "type": "string",
+                                        "example": "(11) 98888-8888",
+                                        "maxLength": 20
+                                    },
+                                    "genero": {
+                                        "type": "string",
+                                        "example": "masculino",
+                                        "nullable": true,
+                                        "enum": [
+                                            "masculino",
+                                            "feminino",
+                                            "nao_binario",
+                                            "outro",
+                                            "prefiro_nao_informar"
+                                        ]
+                                    },
+                                    "data_nascimento": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "1998-05-20",
+                                        "nullable": true
+                                    },
+                                    "peso": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 75.5,
+                                        "nullable": true
+                                    },
+                                    "altura": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 1.78,
+                                        "nullable": true
+                                    },
+                                    "token_convite": {
+                                        "description": "Token de convite gerado por um personal trainer",
+                                        "type": "string",
+                                        "example": "aB3dEfGhIjKlMnOpQrStUvWxYz...",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Aluno registrado com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "Aluno registrado com sucesso."
+                                        },
+                                        "dados": {
+                                            "$ref": "#/components/schemas/AlunoResource"
+                                        },
+                                        "token": {
+                                            "type": "string",
+                                            "example": "2|xyz789abc012..."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erro de validação",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroValidacao"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/login": {
+            "post": {
+                "tags": [
+                    "Autenticação"
+                ],
+                "summary": "Autenticar usuário",
+                "description": "Realiza login com e-mail e senha, retornando um token de acesso Bearer (Sanctum).",
+                "operationId": "login",
+                "requestBody": {
+                    "description": "Credenciais do usuário",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "senha"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "carlos@email.com"
+                                    },
+                                    "senha": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "senha123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login realizado com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "usuario": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "nome": {
+                                                    "type": "string",
+                                                    "example": "Carlos Silva"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "format": "email",
+                                                    "example": "carlos@email.com"
+                                                },
+                                                "data_verificacao_email": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "nullable": true
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "token": {
+                                            "type": "string",
+                                            "example": "1|abc123def456..."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Credenciais inválidas",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Os dados fornecidos são inválidos."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "email": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "As credenciais fornecidas estão incorretas."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sair": {
+            "post": {
+                "tags": [
+                    "Autenticação"
+                ],
+                "summary": "Desconectar usuário",
+                "description": "Revoga todos os tokens de acesso do usuário autenticado.",
+                "operationId": "logout",
+                "responses": {
+                    "200": {
+                        "description": "Desconectado com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "Desconectado com sucesso."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutenticado"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/perfil": {
+            "get": {
+                "tags": [
+                    "Autenticação"
+                ],
+                "summary": "Obter perfil do usuário logado",
+                "description": "Retorna os dados do usuário autenticado, incluindo tipo de perfil (personal/aluno) e o ID do perfil correspondente.",
+                "operationId": "perfil",
+                "responses": {
+                    "200": {
+                        "description": "Dados do perfil retornados com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "usuario": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "nome": {
+                                                    "type": "string",
+                                                    "example": "Carlos Silva"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "format": "email",
+                                                    "example": "carlos@email.com"
+                                                },
+                                                "email_verificado": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "tipo_perfil": {
+                                            "type": "string",
+                                            "example": "personal",
+                                            "enum": [
+                                                "personal",
+                                                "aluno",
+                                                "incompleto"
+                                            ]
+                                        },
+                                        "perfil_id": {
+                                            "type": "integer",
+                                            "example": 1,
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutenticado"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/personal": {
+            "get": {
+                "tags": [
+                    "Personais"
+                ],
+                "summary": "Listar todos os personais",
+                "description": "Retorna uma lista paginada de todos os personal trainers cadastrados. Requer autenticação e e-mail verificado.",
+                "operationId": "listarPersonais",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Número da página",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de personais retornada com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/PersonalResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "$ref": "#/components/schemas/PaginacaoLinks"
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PaginacaoMeta"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutenticado"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "E-mail não verificado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutorizado"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/personal/{personal}": {
+            "get": {
+                "tags": [
+                    "Personais"
+                ],
+                "summary": "Exibir um personal específico",
+                "description": "Retorna os dados detalhados de um personal trainer pelo seu ID. Requer autenticação e e-mail verificado.",
+                "operationId": "exibirPersonal",
+                "parameters": [
+                    {
+                        "name": "personal",
+                        "in": "path",
+                        "description": "ID do personal",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dados do personal retornados com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PersonalResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutenticado"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Personal não encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoEncontrado"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Personais"
+                ],
+                "summary": "Atualizar dados de um personal",
+                "description": "Atualiza parcialmente os dados de um personal trainer. Todos os campos são opcionais. Requer autenticação e e-mail verificado.",
+                "operationId": "atualizarPersonal",
+                "parameters": [
+                    {
+                        "name": "personal",
+                        "in": "path",
+                        "description": "ID do personal",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Campos a serem atualizados",
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "telefone": {
+                                        "type": "string",
+                                        "example": "(11) 97777-7777",
+                                        "maxLength": 20
+                                    },
+                                    "genero": {
+                                        "type": "string",
+                                        "example": "feminino",
+                                        "enum": [
+                                            "masculino",
+                                            "feminino",
+                                            "nao_binario",
+                                            "outro",
+                                            "prefiro_nao_informar"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Personal atualizado com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PersonalResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutenticado"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Personal não encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoEncontrado"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erro de validação",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroValidacao"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Personais"
+                ],
+                "summary": "Inativar um personal",
+                "description": "Realiza soft delete de um personal trainer. Requer autenticação e e-mail verificado.",
+                "operationId": "deletarPersonal",
+                "parameters": [
+                    {
+                        "name": "personal",
+                        "in": "path",
+                        "description": "ID do personal",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Personal inativado com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "Personal inativado com sucesso."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutenticado"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Personal não encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoEncontrado"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/personal/gerar-convite": {
+            "post": {
+                "tags": [
+                    "Convites"
+                ],
+                "summary": "Gerar convite para aluno",
+                "description": "Gera um token de convite para vincular um aluno ao personal trainer autenticado. O aluno utilizará esse token no momento do registro. Se já existir um convite pendente para o mesmo e-mail, o existente será retornado. Requer autenticação e e-mail verificado.",
+                "operationId": "gerarConvite",
+                "requestBody": {
+                    "description": "Dados do convite",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nome",
+                                    "email"
+                                ],
+                                "properties": {
+                                    "nome": {
+                                        "type": "string",
+                                        "example": "João Silva",
+                                        "maxLength": 255
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "joao@email.com",
+                                        "maxLength": 255
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Convite gerado com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "Convite gerado com sucesso."
+                                        },
+                                        "convite": {
+                                            "properties": {
+                                                "email": {
+                                                    "type": "string",
+                                                    "format": "email",
+                                                    "example": "joao@email.com"
+                                                },
+                                                "token": {
+                                                    "type": "string",
+                                                    "example": "aB3dEfGhIjKlMnOpQrStUvWxYz1234567890abcdefghijklmnopqrstuv"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "pendente",
+                                                    "enum": [
+                                                        "pendente",
+                                                        "aceito"
+                                                    ]
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutenticado"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erro de validação",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroValidacao"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/email/verificar/{id}/{hash}": {
+            "get": {
+                "tags": [
+                    "Verificação de E-mail"
+                ],
+                "summary": "Verificar endereço de e-mail",
+                "description": "Valida o link de verificação enviado por e-mail. A URL contém uma assinatura temporária que expira em 60 minutos. Este endpoint é acessado diretamente pelo link do e-mail.",
+                "operationId": "verificarEmail",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID do usuário",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "hash",
+                        "in": "path",
+                        "description": "Hash SHA1 do e-mail do usuário",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "expires",
+                        "in": "query",
+                        "description": "Timestamp de expiração da URL assinada",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "signature",
+                        "in": "query",
+                        "description": "Assinatura criptográfica da URL",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "E-mail verificado com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "E-mail verificado com sucesso!"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Link inválido, expirado ou hash incorreto",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "Link de verificação inválido ou expirado."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Usuário não encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoEncontrado"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/email/reenviar": {
+            "post": {
+                "tags": [
+                    "Verificação de E-mail"
+                ],
+                "summary": "Reenviar e-mail de verificação",
+                "description": "Reenvia o e-mail de verificação para o usuário autenticado. Requer autenticação, mas não requer e-mail verificado.",
+                "operationId": "reenviarVerificacao",
+                "responses": {
+                    "200": {
+                        "description": "E-mail de verificação reenviado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "E-mail de verificação reenviado."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutenticado"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "E-mail já verificado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "E-mail já verificado."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ErroValidacao": {
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "Os dados fornecidos são inválidos."
+                    },
+                    "errors": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "ErroNaoAutenticado": {
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "Unauthenticated."
+                    }
+                },
+                "type": "object"
+            },
+            "ErroNaoAutorizado": {
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "This action is unauthorized."
+                    }
+                },
+                "type": "object"
+            },
+            "ErroNaoEncontrado": {
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "Recurso não encontrado."
+                    }
+                },
+                "type": "object"
+            },
+            "MensagemSucesso": {
+                "properties": {
+                    "mensagem": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalResource": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "usuario_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "telefone": {
+                        "type": "string",
+                        "example": "(11) 99999-9999"
+                    },
+                    "genero": {
+                        "type": "string",
+                        "example": "masculino",
+                        "enum": [
+                            "masculino",
+                            "feminino",
+                            "nao_binario",
+                            "outro",
+                            "prefiro_nao_informar"
+                        ]
+                    },
+                    "cadastrado_em": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-04-13 22:00:00"
+                    },
+                    "atualizado_em": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-04-13 22:00:00"
+                    },
+                    "deletado_em": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "AlunoResource": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "nome": {
+                        "type": "string",
+                        "example": "João Silva"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "joao@email.com"
+                    },
+                    "telefone": {
+                        "type": "string",
+                        "example": "(11) 99999-9999"
+                    },
+                    "genero": {
+                        "type": "string",
+                        "example": "masculino",
+                        "nullable": true,
+                        "enum": [
+                            "masculino",
+                            "feminino",
+                            "nao_binario",
+                            "outro",
+                            "prefiro_nao_informar"
+                        ]
+                    },
+                    "dados_fisicos": {
+                        "properties": {
+                            "peso": {
+                                "type": "number",
+                                "format": "float",
+                                "example": 75.5,
+                                "nullable": true
+                            },
+                            "altura": {
+                                "type": "number",
+                                "format": "float",
+                                "example": 1.78,
+                                "nullable": true
+                            },
+                            "data_nascimento": {
+                                "type": "string",
+                                "format": "date",
+                                "example": "1998-05-20",
+                                "nullable": true
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "status_vinculo": {
+                        "type": "string",
+                        "example": "ativo",
+                        "nullable": true
+                    },
+                    "status_conta": {
+                        "type": "string",
+                        "example": "Ativo",
+                        "enum": [
+                            "Ativo",
+                            "Inativo"
+                        ]
+                    },
+                    "cadastrado_em": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-04-13 22:00:00"
+                    }
+                },
+                "type": "object"
+            },
+            "PaginacaoLinks": {
+                "properties": {
+                    "first": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "last": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "prev": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PaginacaoMeta": {
+                "properties": {
+                    "current_page": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "from": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "last_page": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "per_page": {
+                        "type": "integer",
+                        "example": 15
+                    },
+                    "to": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "total": {
+                        "type": "integer",
+                        "example": 5
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "sanctum": {
+                "type": "http",
+                "description": "Insira o token retornado no login/registro. Exemplo: {token}",
+                "scheme": "bearer",
+                "bearerFormat": "Sanctum"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Autenticação",
+            "description": "Rotas de registro, login, logout e perfil do usuário"
+        },
+        {
+            "name": "Verificação de E-mail",
+            "description": "Rotas para verificação e reenvio de e-mail de confirmação"
+        },
+        {
+            "name": "Personais",
+            "description": "CRUD de Personal Trainers (requer e-mail verificado)"
+        },
+        {
+            "name": "Alunos",
+            "description": "CRUD de Alunos (requer e-mail verificado)"
+        },
+        {
+            "name": "Convites",
+            "description": "Sistema de convites para vincular alunos a personais"
+        }
+    ]
+}
