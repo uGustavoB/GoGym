@@ -142,3 +142,28 @@ export function logoutRequest() {
 export function resendVerificationRequest() {
   return api<MessageResponse>("/email/reenviar", { method: "POST" })
 }
+
+export interface EsqueciSenhaData {
+  email: string
+}
+
+export function esqueciSenhaRequest(data: EsqueciSenhaData) {
+  return api<MessageResponse>("/esqueci-senha", {
+    method: "POST",
+    body: JSON.stringify(data),
+  })
+}
+
+export interface RedefinirSenhaData {
+  email: string
+  token: string
+  senha: string
+  senha_confirmation: string
+}
+
+export function redefinirSenhaRequest(data: RedefinirSenhaData) {
+  return api<MessageResponse>("/redefinir-senha", {
+    method: "POST",
+    body: JSON.stringify(data),
+  })
+}

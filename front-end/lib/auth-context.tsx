@@ -41,7 +41,7 @@ interface AuthContextType extends AuthState {
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
-const PUBLIC_ROUTES = ["/login", "/registrar"]
+const PUBLIC_ROUTES = ["/login", "/registrar", "/auth", "/esqueci-senha", "/redefinir-senha"]
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -94,7 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const isPublicRoute = PUBLIC_ROUTES.some((route) => pathname.startsWith(route))
 
     if (!state.token && !isPublicRoute) {
-      router.replace("/login")
+      router.replace("/auth")
       return
     }
 
@@ -179,7 +179,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       perfilId: null,
       isLoading: false,
     })
-    router.replace("/login")
+    router.replace("/auth")
   }
 
   return (

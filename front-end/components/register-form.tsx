@@ -33,9 +33,10 @@ const GENEROS = [
 ]
 
 export function RegisterForm({
+  onSwitchMode,
   className,
   ...props
-}: React.ComponentPropsWithoutRef<"div">) {
+}: React.ComponentPropsWithoutRef<"div"> & { onSwitchMode?: () => void }) {
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -60,9 +61,15 @@ export function RegisterForm({
           </Tabs>
           <div className="mt-4 text-center text-sm">
             Já possui uma conta?{" "}
-            <a href="/login" className="underline underline-offset-4 text-primary">
-              Fazer login
-            </a>
+            {onSwitchMode ? (
+              <button type="button" onClick={onSwitchMode} className="underline underline-offset-4 text-primary">
+                Fazer login
+              </button>
+            ) : (
+              <a href="/auth" className="underline underline-offset-4 text-primary">
+                Fazer login
+              </a>
+            )}
           </div>
         </CardContent>
       </Card>

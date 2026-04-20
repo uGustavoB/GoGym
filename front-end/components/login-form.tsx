@@ -17,9 +17,10 @@ import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
 
 export function LoginForm({
+  onSwitchMode,
   className,
   ...props
-}: React.ComponentPropsWithoutRef<"div">) {
+}: React.ComponentPropsWithoutRef<"div"> & { onSwitchMode?: () => void }) {
   const { login } = useAuth()
   const [email, setEmail] = useState("")
   const [senha, setSenha] = useState("")
@@ -74,8 +75,9 @@ export function LoginForm({
                 )}
               </div>
               <div className="grid gap-2">
-                <div className="flex items-center">
+                <div className="flex items-center justify-between">
                   <Label htmlFor="login-password">Senha</Label>
+                  <a href="/esqueci-senha" className="text-xs text-primary underline underline-offset-4 hover:text-primary/90">Esqueci a senha</a>
                 </div>
                 <Input
                   id="login-password"
@@ -102,9 +104,15 @@ export function LoginForm({
             </div>
             <div className="mt-4 text-center text-sm">
               Não possui uma conta?{" "}
-              <a href="/registrar" className="underline underline-offset-4 text-primary">
-                Criar conta
-              </a>
+              {onSwitchMode ? (
+                <button type="button" onClick={onSwitchMode} className="underline underline-offset-4 text-primary">
+                  Criar conta
+                </button>
+              ) : (
+                <a href="/registrar" className="underline underline-offset-4 text-primary">
+                  Criar conta
+                </a>
+              )}
             </div>
           </form>
         </CardContent>
