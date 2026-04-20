@@ -1,0 +1,98 @@
+services:
+  app:
+    build:
+      context: ./back-end
+      dockerfile: Dockerfile
+    container_name: gogym_app
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./back-end:/var/www/html
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=gogym
+      - DB_USERNAME=root
+      - DB_PASSWORD=rootpassword
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=null
+      - REDIS_PORT=6379
+      - QUEUE_CONNECTION=redis
+      - APP_FRONTEND_URL=http://localhost:3000
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    command: >
+      bash -c "composer install --no-interaction &&
+               php artisan key:generate --no-interaction &&
+               php artisan migrate --force &&
+               php artisan serve --host=0.0.0.0 --port=8000"
+    networks:
+      - gogym_network
+
+  queue:
+    build:
+      context: ./back-end
+      dockerfile: Dockerfile
+    container_name: gogym_queue
+    volumes:
+      - ./back-end:/var/www/html
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=gogym
+      - DB_USERNAME=root
+      - DB_PASSWORD=rootpassword
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=null
+      - REDIS_PORT=6379
+      - QUEUE_CONNECTION=redis
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    command: php artisan queue:work redis --tries=3 --timeout=90
+    networks:
+      - gogym_network
+
+  db:
+    image: mysql:8.0
+    container_name: gogym_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gogym
+    ports:
+      - "3384:3306"
+    volumes:
+      - gogym_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    networks:
+      - gogym_network
+
+  redis:
+    image: redis:alpine
+    container_name: gogym_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - gogym_redis_data:/data
+    networks:
+      - gogym_network
+
+networks:
+  gogym_network:
+    driver: bridge
+
+volumes:
+  gogym_mysql_data:
+  gogym_redis_data:
