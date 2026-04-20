@@ -191,12 +191,12 @@ class PersonalController extends Controller
     {
         $dados = $requisicao->validated();
 
-        $personalId = $this->servico
+        $personal = $this->servico
             ->buscarPorUsuarioId($requisicao->user()->id)
-            ->first()
-            ->id;
+            ->first();
 
-        $dados['personal_id'] = $personalId;
+        $dados['personal_id'] = $personal->id;
+        $dados['nome_personal'] = $requisicao->user()->nome;
 
         $convite = app(ConviteService::class)
             ->gerarConvite($dados);

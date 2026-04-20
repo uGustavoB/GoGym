@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Aluno;
 use App\Models\Convite;
+use App\Notifications\ConviteAlunoNotification;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
 class ConviteService
@@ -16,15 +18,32 @@ class ConviteService
             ->first();
 
         if ($conviteExistente) {
+            Notification::route('mail', $dados['email'])
+                ->notify(new ConviteAlunoNotification(
+                    $dados['nome'],
+                    $dados['nome_personal'],
+                    $dados['email'],
+                    $conviteExistente->token
+                ));
             return $conviteExistente;
         }
 
-        return Convite::create([
+        $convite = Convite::create([
             'personal_id' => $dados['personal_id'],
             'email' => $dados['email'],
             'token' => Str::random(60),
             'status' => 'pendente'
         ]);
+
+        Notification::route('mail', $dados['email'])
+            ->notify(new ConviteAlunoNotification(
+                $dados['nome'],
+                $dados['nome_personal'],
+                $dados['email'],
+                $convite->token
+            ));
+
+        return $convite;
     }
 
     public function vincularAlunoPorToken(?string $token, Aluno $aluno): void

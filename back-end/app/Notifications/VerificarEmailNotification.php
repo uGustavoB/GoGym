@@ -64,7 +64,9 @@ class VerificarEmailNotification extends Notification implements ShouldQueue
 
     protected function gerarUrl(object $notifiable): string
     {
-        return URL::temporarySignedRoute(
+        $frontendUrl = rtrim(config('app.frontend_url', 'http://localhost:3000'), '/');
+
+        $verifyUrl = URL::temporarySignedRoute(
             'verification.verify',
             Carbon::now()->addMinutes($this->expiracao),
             [
@@ -72,5 +74,10 @@ class VerificarEmailNotification extends Notification implements ShouldQueue
                 'hash' => sha1($notifiable->getEmailForVerification()),
             ]
         );
+
+        $parsedUrl = parse_url($verifyUrl);
+        $query = $parsedUrl['query'] ?? '';
+
+        return $frontendUrl . '/verificar-email/' . $notifiable->getKey() . '/' . sha1($notifiable->getEmailForVerification()) . '?' . $query;
     }
 }

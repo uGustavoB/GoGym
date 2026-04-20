@@ -7,17 +7,23 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class RedefinirSenhaNotification extends Notification implements ShouldQueue
+class ConviteAlunoNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
+    private $nomeAluno;
+    private $nomePersonal;
+    private $email;
     private $token;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct($token)
+    public function __construct(string $nomeAluno, string $nomePersonal, string $email, string $token)
     {
+        $this->nomeAluno = $nomeAluno;
+        $this->nomePersonal = $nomePersonal;
+        $this->email = $email;
         $this->token = $token;
     }
 
@@ -37,16 +43,16 @@ class RedefinirSenhaNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         $frontendUrl = rtrim(config('app.frontend_url', 'http://localhost:3000'), '/');
-
-        $url = "{$frontendUrl}/redefinir-senha?token={$this->token}&email={$notifiable->email}";
+        
+        $url = "{$frontendUrl}/registrar?tipo=aluno&token_convite={$this->token}&email=" . urlencode($this->email);
 
         return (new MailMessage)
-            ->subject('Redefinição de senha')
-            ->greeting('Olá, ' . $notifiable->nome . '!')
-            ->line('Você está recebendo este e-mail porque recebemos um pedido de redefinição de senha para sua conta.')
-            ->action('Redefinir senha', $url)
-            ->line('Este link de redefinição de senha expirará em 60 minutos.')
-            ->line('Se você não solicitou a redefinição de senha, nenhuma ação adicional é necessária.')
+            ->subject('Convite para participar do ' . config('app.name'))
+            ->greeting('Olá, ' . $this->nomeAluno . '!')
+            ->line("Você foi convidado(a) por {$this->nomePersonal} para se tornar aluno(a) no aplicativo " . config('app.name') . ".")
+            ->line('Clique no botão abaixo para criar sua conta e aceitar o convite automaticamente:')
+            ->action('Aceitar Convite e Cadastrar', $url)
+            ->line('Se você não esperava por esse convite, pode ignorar este e-mail placidamente.')
             ->salutation('Atenciosamente, Equipe ' . config('app.name'));
     }
 
