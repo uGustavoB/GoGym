@@ -18,6 +18,10 @@ Route::post('/login', [AutenticacaoController::class, 'entrar']);
 Route::get('/email/verificar/{id}/{hash}', [VerificacaoEmailController::class, 'verificar'])
     ->name('verification.verify');
 
+// Rotas de redefinição de senha
+Route::post('/esqueci-senha', [AutenticacaoController::class, 'esqueciSenha']);
+Route::post('/redefinir-senha', [AutenticacaoController::class, 'redefinirSenha']);
+
 // Aqui vai todas as rotas protegidas, ou seja, aquelas que exigem autenticação para serem acessadas.
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/perfil', [AutenticacaoController::class, 'perfil']);

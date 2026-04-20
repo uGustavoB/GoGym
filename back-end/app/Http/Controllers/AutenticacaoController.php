@@ -251,4 +251,32 @@ class AutenticacaoController extends Controller
     {
         return $this->usuarioService->obterUsuarioLogado($requisicao);
     }
+
+    public function esqueciSenha(Request $request)
+    {
+        $dados = $request->validate([
+            'email' => 'required|email'
+        ]);
+
+        $this->authService->enviarEmailRedefinicao($dados);
+
+        return response()->json([
+            'mensagem' => 'Se o e-mail estiver cadastrado, um link de redefinição foi enviado.'
+        ], 200);
+    }
+
+    public function redefinirSenha(Request $request)
+    {
+        $dados = $request->validate([
+            'email' => 'required|email',
+            'token' => 'required|string',
+            'senha' => 'required|string|min:4|confirmed'
+        ]);
+
+        $this->authService->redefinirSenha($dados);
+
+        return response()->json([
+            'mensagem' => 'Sua senha foi redefinida com sucesso.'
+        ], 200);
+    }
 }
