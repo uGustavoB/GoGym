@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\EsqueciSenhaRequest;
 use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RedefinirSenhaRequest;
 use App\Http\Requests\RegistrarAlunoRequest;
 use App\Http\Requests\RegistrarPersonalRequest;
 use App\Services\AlunoService;
@@ -278,14 +280,31 @@ class AutenticacaoController extends Controller
                     ]
                 )
             ),
-            new OA\Response(response: 422, description: "Erro de validação", content: new OA\JsonContent(ref: "#/components/schemas/ErroValidacao"))
+            new OA\Response(
+                response: 422,
+                description: "Erro de validação",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "message", type: "string", example: "Os dados fornecidos são inválidos."),
+                        new OA\Property(
+                            property: "errors",
+                            properties: [
+                                new OA\Property(
+                                    property: "email",
+                                    type: "array",
+                                    items: new OA\Items(type: "string", example: "O endereço de e-mail é obrigatório.")
+                                )
+                            ],
+                            type: "object"
+                        )
+                    ]
+                )
+            )
         ]
     )]
-    public function esqueciSenha(Request $request)
+    public function esqueciSenha(EsqueciSenhaRequest $request)
     {
-        $dados = $request->validate([
-            'email' => 'required|email'
-        ]);
+        $dados = $request->validated();
 
         $this->authService->enviarEmailRedefinicao($dados);
 
@@ -323,16 +342,41 @@ class AutenticacaoController extends Controller
                     ]
                 )
             ),
-            new OA\Response(response: 422, description: "Erro de validação ou de redefinição (token inválido/expirado)", content: new OA\JsonContent(ref: "#/components/schemas/ErroValidacao"))
+            new OA\Response(
+                response: 422,
+                description: "Erro de validação",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "message", type: "string", example: "Os dados fornecidos são inválidos."),
+                        new OA\Property(
+                            property: "errors",
+                            properties: [
+                                new OA\Property(
+                                    property: "email",
+                                    type: "array",
+                                    items: new OA\Items(type: "string", example: "O formato do e-mail fornecido é inválido.")
+                                ),
+                                new OA\Property(
+                                    property: "token",
+                                    type: "array",
+                                    items: new OA\Items(type: "string", example: "O token de validação é obrigatório na requisição.")
+                                ),
+                                new OA\Property(
+                                    property: "senha",
+                                    type: "array",
+                                    items: new OA\Items(type: "string", example: "A confirmação de senha não confere.")
+                                )
+                            ],
+                            type: "object"
+                        )
+                    ]
+                )
+            )
         ]
     )]
-    public function redefinirSenha(Request $request)
+    public function redefinirSenha(RedefinirSenhaRequest $request)
     {
-        $dados = $request->validate([
-            'email' => 'required|email',
-            'token' => 'required|string',
-            'senha' => 'required|string|min:4|confirmed'
-        ]);
+        $dados = $request->validated();
 
         $this->authService->redefinirSenha($dados);
 
