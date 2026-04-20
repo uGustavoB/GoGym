@@ -45,9 +45,7 @@ class AuthService
         $usuario = Usuario::where('email', $dados['email'])->first();
 
         if (!$usuario) {
-            throw ValidationException::withMessages([
-                'email' => ['Não encontramos um usuário com este endereço de e-mail.'],
-            ]);
+            return;
         }
 
         $token = Str::random(64);
