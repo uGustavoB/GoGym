@@ -99,7 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (state.token && state.user) {
-      if (!state.user.email_verificado && pathname !== "/verificar-email") {
+      if (!state.user.email_verificado && !pathname.startsWith("/verificar-email")) {
         if (!isPublicRoute) {
           router.replace("/verificar-email")
         }

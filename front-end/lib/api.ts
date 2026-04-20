@@ -167,3 +167,27 @@ export function redefinirSenhaRequest(data: RedefinirSenhaData) {
     body: JSON.stringify(data),
   })
 }
+
+export function verifyEmailRequest(id: string, hash: string, expires: string, signature: string) {
+  return api<MessageResponse>(`/email/verificar/${id}/${hash}?expires=${expires}&signature=${signature}`, {
+    method: "GET",
+  })
+}
+
+export interface ConviteResponse {
+  mensagem: string;
+  convite: {
+    email: string;
+    token: string;
+    status: string;
+  };
+}
+
+export function gerarConviteRequest(data: { nome: string, email: string }) {
+  return api<ConviteResponse>("/personal/gerar-convite", {
+    method: "POST",
+    body: JSON.stringify(data),
+  })
+}
+
+

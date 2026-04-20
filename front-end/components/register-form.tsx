@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -37,6 +38,10 @@ export function RegisterForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div"> & { onSwitchMode?: () => void }) {
+  const searchParams = useSearchParams()
+  const hasInviteToken = !!searchParams?.get("token_convite")
+  const defaultTab = searchParams?.get("tipo") === "aluno" ? "aluno" : "personal"
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -47,9 +52,9 @@ export function RegisterForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="personal" className="w-full">
+          <Tabs defaultValue={defaultTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="personal">Personal Trainer</TabsTrigger>
+              <TabsTrigger value="personal" disabled={hasInviteToken}>Personal Trainer</TabsTrigger>
               <TabsTrigger value="aluno">Aluno</TabsTrigger>
             </TabsList>
             <TabsContent value="personal">
@@ -76,6 +81,7 @@ export function RegisterForm({
     </div>
   )
 }
+
 
 function PersonalForm() {
   const { registerPersonal } = useAuth()
@@ -208,23 +214,25 @@ function PersonalForm() {
 
 function AlunoForm() {
   const { registerAluno } = useAuth()
+  const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string[]>>({})
   const [form, setForm] = useState({
     nome: "",
-    email: "",
+    email: searchParams?.get("email") || "",
     senha: "",
     telefone: "",
     genero: "",
     data_nascimento: "",
     peso: "",
     altura: "",
-    token_convite: "",
+    token_convite: searchParams?.get("token_convite") || "",
   })
 
   function updateField(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }))
   }
+
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -385,7 +393,7 @@ function AlunoForm() {
           placeholder="Cole o token do seu personal"
           value={form.token_convite}
           onChange={(e) => updateField("token_convite", e.target.value)}
-          disabled={isLoading}
+          disabled={isLoading || !!searchParams?.get("token_convite")}
         />
         {errors.token_convite && (
           <p className="text-sm text-destructive">{errors.token_convite[0]}</p>

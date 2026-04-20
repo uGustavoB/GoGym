@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -18,7 +18,8 @@ export default function VerifyEmailPage() {
   const { user, refreshProfile, logout, isLoading: authLoading } = useAuth()
   const [isResending, setIsResending] = useState(false)
   const [isChecking, setIsChecking] = useState(false)
-  const [cooldown, setCooldown] = useState(0)
+  const [cooldown, setCooldown] = useState(60)
+  const [nextCooldown] = useState(120)
 
   // Countdown timer for cooldown
   useEffect(() => {
@@ -34,7 +35,7 @@ export default function VerifyEmailPage() {
     try {
       await resendVerificationRequest()
       toast.success("E-mail de verificação reenviado!")
-      setCooldown(60)
+      setCooldown(nextCooldown)
     } catch (err: unknown) {
       const error = err as { message?: string }
       toast.error(error.message || "Erro ao reenviar e-mail.")

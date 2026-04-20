@@ -77,7 +77,6 @@ export function LoginForm({
               <div className="grid gap-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="login-password">Senha</Label>
-                  <a href="/esqueci-senha" className="text-xs text-primary underline underline-offset-4 hover:text-primary/90">Esqueci a senha</a>
                 </div>
                 <Input
                   id="login-password"
@@ -85,11 +84,13 @@ export function LoginForm({
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
                   required
+                  placeholder="Digite sua senha"
                   disabled={isLoading}
                 />
                 {errors.senha && (
                   <p className="text-sm text-destructive">{errors.senha[0]}</p>
                 )}
+                <a href="/esqueci-senha" className="text-xs text-primary underline underline-offset-4 hover:text-primary/90">Esqueci a senha</a>
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
