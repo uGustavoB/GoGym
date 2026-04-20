@@ -15,9 +15,9 @@ use OpenApi\Attributes as OA;
 class AutenticacaoController extends Controller
 {
     private AuthService $authService;
-    protected $personalService;
-    protected $alunoService;
-    protected $usuarioService;
+    protected PersonalService $personalService;
+    protected AlunoService $alunoService;
+    protected UsuarioService $usuarioService;
 
     public function __construct(AuthService $authService, PersonalService $personalService, AlunoService $alunoService, UsuarioService $usuarioService)
     {
@@ -30,23 +30,23 @@ class AutenticacaoController extends Controller
     #[OA\Post(
         path: "/registrar/personal",
         operationId: "registrarPersonal",
-        summary: "Registrar um novo Personal Trainer",
         description: "Cria um novo usuário com perfil de personal trainer. Um e-mail de verificação será enviado automaticamente via fila Redis.",
-        tags: ["Autenticação"],
+        summary: "Registrar um novo Personal Trainer",
         requestBody: new OA\RequestBody(
-            required: true,
             description: "Dados para registro do personal",
+            required: true,
             content: new OA\JsonContent(
                 required: ["nome", "email", "senha", "telefone", "genero"],
                 properties: [
-                    new OA\Property(property: "nome", type: "string", maxLength: 255, example: "Carlos Silva"),
-                    new OA\Property(property: "email", type: "string", format: "email", maxLength: 255, example: "carlos@email.com"),
-                    new OA\Property(property: "senha", type: "string", format: "password", minLength: 4, example: "senha123"),
-                    new OA\Property(property: "telefone", type: "string", maxLength: 20, example: "(11) 99999-9999"),
-                    new OA\Property(property: "genero", type: "string", enum: ["masculino", "feminino", "nao_binario", "outro", "prefiro_nao_informar"], example: "masculino"),
+                    new OA\Property(property: "nome", type: "string", example: "Carlos Silva", maxLength: 255),
+                    new OA\Property(property: "email", type: "string", format: "email", example: "carlos@email.com", maxLength: 255),
+                    new OA\Property(property: "senha", type: "string", format: "password", example: "senha123", minLength: 4),
+                    new OA\Property(property: "telefone", type: "string", example: "(11) 99999-9999", maxLength: 20),
+                    new OA\Property(property: "genero", type: "string", example: "masculino", enum: ["masculino", "feminino", "nao_binario", "outro", "prefiro_nao_informar"]),
                 ]
             )
         ),
+        tags: ["Autenticação"],
         responses: [
             new OA\Response(
                 response: 201,
@@ -76,27 +76,27 @@ class AutenticacaoController extends Controller
     #[OA\Post(
         path: "/registrar/aluno",
         operationId: "registrarAluno",
-        summary: "Registrar um novo Aluno",
         description: "Cria um novo usuário com perfil de aluno. Opcionalmente, pode ser vinculado a um personal trainer através de um token de convite. Um e-mail de verificação será enviado automaticamente via fila Redis.",
-        tags: ["Autenticação"],
+        summary: "Registrar um novo Aluno",
         requestBody: new OA\RequestBody(
-            required: true,
             description: "Dados para registro do aluno",
+            required: true,
             content: new OA\JsonContent(
                 required: ["nome", "email", "senha", "telefone"],
                 properties: [
-                    new OA\Property(property: "nome", type: "string", maxLength: 255, example: "João Silva"),
-                    new OA\Property(property: "email", type: "string", format: "email", maxLength: 255, example: "joao@email.com"),
-                    new OA\Property(property: "senha", type: "string", format: "password", minLength: 4, example: "senha123"),
-                    new OA\Property(property: "telefone", type: "string", maxLength: 20, example: "(11) 98888-8888"),
-                    new OA\Property(property: "genero", type: "string", enum: ["masculino", "feminino", "nao_binario", "outro", "prefiro_nao_informar"], nullable: true, example: "masculino"),
-                    new OA\Property(property: "data_nascimento", type: "string", format: "date", nullable: true, example: "1998-05-20"),
-                    new OA\Property(property: "peso", type: "number", format: "float", nullable: true, example: 75.5),
-                    new OA\Property(property: "altura", type: "number", format: "float", nullable: true, example: 1.78),
-                    new OA\Property(property: "token_convite", type: "string", nullable: true, description: "Token de convite gerado por um personal trainer", example: "aB3dEfGhIjKlMnOpQrStUvWxYz..."),
+                    new OA\Property(property: "nome", type: "string", example: "João Silva", maxLength: 255),
+                    new OA\Property(property: "email", type: "string", format: "email", example: "joao@email.com", maxLength: 255),
+                    new OA\Property(property: "senha", type: "string", format: "password", example: "senha123", minLength: 4),
+                    new OA\Property(property: "telefone", type: "string", example: "(11) 98888-8888", maxLength: 20),
+                    new OA\Property(property: "genero", type: "string", example: "masculino", nullable: true, enum: ["masculino", "feminino", "nao_binario", "outro", "prefiro_nao_informar"]),
+                    new OA\Property(property: "data_nascimento", type: "string", format: "date", example: "1998-05-20", nullable: true),
+                    new OA\Property(property: "peso", type: "number", format: "float", example: 75.5, nullable: true),
+                    new OA\Property(property: "altura", type: "number", format: "float", example: 1.78, nullable: true),
+                    new OA\Property(property: "token_convite", description: "Token de convite gerado por um personal trainer", type: "string", example: "aB3dEfGhIjKlMnOpQrStUvWxYz...", nullable: true),
                 ]
             )
         ),
+        tags: ["Autenticação"],
         responses: [
             new OA\Response(
                 response: 201,
@@ -126,12 +126,11 @@ class AutenticacaoController extends Controller
     #[OA\Post(
         path: "/login",
         operationId: "login",
-        summary: "Autenticar usuário",
         description: "Realiza login com e-mail e senha, retornando um token de acesso Bearer (Sanctum).",
-        tags: ["Autenticação"],
+        summary: "Autenticar usuário",
         requestBody: new OA\RequestBody(
-            required: true,
             description: "Credenciais do usuário",
+            required: true,
             content: new OA\JsonContent(
                 required: ["email", "senha"],
                 properties: [
@@ -140,6 +139,7 @@ class AutenticacaoController extends Controller
                 ]
             )
         ),
+        tags: ["Autenticação"],
         responses: [
             new OA\Response(
                 response: 200,
@@ -190,8 +190,8 @@ class AutenticacaoController extends Controller
     #[OA\Post(
         path: "/sair",
         operationId: "logout",
-        summary: "Desconectar usuário",
         description: "Revoga todos os tokens de acesso do usuário autenticado.",
+        summary: "Desconectar usuário",
         security: [["sanctum" => []]],
         tags: ["Autenticação"],
         responses: [
@@ -219,8 +219,8 @@ class AutenticacaoController extends Controller
     #[OA\Get(
         path: "/perfil",
         operationId: "perfil",
-        summary: "Obter perfil do usuário logado",
         description: "Retorna os dados do usuário autenticado, incluindo tipo de perfil (personal/aluno) e o ID do perfil correspondente.",
+        summary: "Obter perfil do usuário logado",
         security: [["sanctum" => []]],
         tags: ["Autenticação"],
         responses: [
@@ -239,8 +239,8 @@ class AutenticacaoController extends Controller
                             ],
                             type: "object"
                         ),
-                        new OA\Property(property: "tipo_perfil", type: "string", enum: ["personal", "aluno", "incompleto"], example: "personal"),
-                        new OA\Property(property: "perfil_id", type: "integer", nullable: true, example: 1),
+                        new OA\Property(property: "tipo_perfil", type: "string", example: "personal", enum: ["personal", "aluno", "incompleto"]),
+                        new OA\Property(property: "perfil_id", type: "integer", example: 1, nullable: true),
                     ]
                 )
             ),
@@ -252,6 +252,35 @@ class AutenticacaoController extends Controller
         return $this->usuarioService->obterUsuarioLogado($requisicao);
     }
 
+    #[OA\Post(
+        path: "/esqueci-senha",
+        operationId: "esqueciSenha",
+        description: "Envia um link de redefinição de senha para o e-mail informado (se o usuário existir).",
+        summary: "Solicitar redefinição de senha",
+        requestBody: new OA\RequestBody(
+            description: "E-mail do usuário para recuperação",
+            required: true,
+            content: new OA\JsonContent(
+                required: ["email"],
+                properties: [
+                    new OA\Property(property: "email", type: "string", format: "email", example: "carlos@email.com")
+                ]
+            )
+        ),
+        tags: ["Autenticação"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Solicitação processada com sucesso",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "mensagem", type: "string", example: "Se o e-mail estiver cadastrado, um link de redefinição foi enviado.")
+                    ]
+                )
+            ),
+            new OA\Response(response: 422, description: "Erro de validação", content: new OA\JsonContent(ref: "#/components/schemas/ErroValidacao"))
+        ]
+    )]
     public function esqueciSenha(Request $request)
     {
         $dados = $request->validate([
@@ -262,9 +291,41 @@ class AutenticacaoController extends Controller
 
         return response()->json([
             'mensagem' => 'Se o e-mail estiver cadastrado, um link de redefinição foi enviado.'
-        ], 200);
+        ]);
     }
 
+    #[OA\Post(
+        path: "/redefinir-senha",
+        operationId: "redefinirSenha",
+        description: "Redefine a senha do usuário utilizando o token enviado por e-mail. Este método invalida todos os tokens de acesso ativos para o usuário logar novamente.",
+        summary: "Redefinir senha do usuário",
+        requestBody: new OA\RequestBody(
+            description: "Dados para redefinição de senha",
+            required: true,
+            content: new OA\JsonContent(
+                required: ["email", "token", "senha", "senha_confirmation"],
+                properties: [
+                    new OA\Property(property: "email", type: "string", format: "email", example: "carlos@email.com"),
+                    new OA\Property(property: "token", type: "string", example: "abc123def456..."),
+                    new OA\Property(property: "senha", type: "string", format: "password", example: "nova-senha-123", minLength: 4),
+                    new OA\Property(property: "senha_confirmation", type: "string", format: "password", example: "nova-senha-123", minLength: 4)
+                ]
+            )
+        ),
+        tags: ["Autenticação"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Senha redefinida com sucesso",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "mensagem", type: "string", example: "Sua senha foi redefinida com sucesso.")
+                    ]
+                )
+            ),
+            new OA\Response(response: 422, description: "Erro de validação ou de redefinição (token inválido/expirado)", content: new OA\JsonContent(ref: "#/components/schemas/ErroValidacao"))
+        ]
+    )]
     public function redefinirSenha(Request $request)
     {
         $dados = $request->validate([
@@ -277,6 +338,6 @@ class AutenticacaoController extends Controller
 
         return response()->json([
             'mensagem' => 'Sua senha foi redefinida com sucesso.'
-        ], 200);
+        ]);
     }
 }

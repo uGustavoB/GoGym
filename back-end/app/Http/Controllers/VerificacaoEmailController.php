@@ -13,14 +13,14 @@ class VerificacaoEmailController extends Controller
     #[OA\Get(
         path: "/email/verificar/{id}/{hash}",
         operationId: "verificarEmail",
-        summary: "Verificar endereço de e-mail",
         description: "Valida o link de verificação enviado por e-mail. A URL contém uma assinatura temporária que expira em 60 minutos. Este endpoint é acessado diretamente pelo link do e-mail.",
+        summary: "Verificar endereço de e-mail",
         tags: ["Verificação de E-mail"],
         parameters: [
-            new OA\Parameter(name: "id", in: "path", required: true, description: "ID do usuário", schema: new OA\Schema(type: "integer", example: 1)),
-            new OA\Parameter(name: "hash", in: "path", required: true, description: "Hash SHA1 do e-mail do usuário", schema: new OA\Schema(type: "string")),
-            new OA\Parameter(name: "expires", in: "query", required: true, description: "Timestamp de expiração da URL assinada", schema: new OA\Schema(type: "integer")),
-            new OA\Parameter(name: "signature", in: "query", required: true, description: "Assinatura criptográfica da URL", schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "id", description: "ID do usuário", in: "path", required: true, schema: new OA\Schema(type: "integer", example: 1)),
+            new OA\Parameter(name: "hash", description: "Hash SHA1 do e-mail do usuário", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "expires", description: "Timestamp de expiração da URL assinada", in: "query", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "signature", description: "Assinatura criptográfica da URL", in: "query", required: true, schema: new OA\Schema(type: "string")),
         ],
         responses: [
             new OA\Response(
@@ -75,8 +75,8 @@ class VerificacaoEmailController extends Controller
     #[OA\Post(
         path: "/email/reenviar",
         operationId: "reenviarVerificacao",
-        summary: "Reenviar e-mail de verificação",
         description: "Reenvia o e-mail de verificação para o usuário autenticado. Requer autenticação, mas não requer e-mail verificado.",
+        summary: "Reenviar e-mail de verificação",
         security: [["sanctum" => []]],
         tags: ["Verificação de E-mail"],
         responses: [

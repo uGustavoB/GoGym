@@ -7,12 +7,13 @@ use App\Http\Requests\Personais\AtualizarPersonalRequest;
 use App\Http\Requests\Personais\GerarConviteRequest;
 use App\Http\Resources\PersonalResource;
 use App\Models\Personal;
+use App\Services\ConviteService;
 use App\Services\PersonalService;
 use OpenApi\Attributes as OA;
 
 class PersonalController extends Controller
 {
-    protected $servico;
+    protected PersonalService $servico;
 
     public function __construct(PersonalService $servico)
     {
@@ -22,12 +23,12 @@ class PersonalController extends Controller
     #[OA\Get(
         path: "/personal",
         operationId: "listarPersonais",
-        summary: "Listar todos os personais",
         description: "Retorna uma lista paginada de todos os personal trainers cadastrados. Requer autenticação e e-mail verificado.",
+        summary: "Listar todos os personais",
         security: [["sanctum" => []]],
         tags: ["Personais"],
         parameters: [
-            new OA\Parameter(name: "page", in: "query", required: false, description: "Número da página", schema: new OA\Schema(type: "integer", default: 1)),
+            new OA\Parameter(name: "page", description: "Número da página", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 1)),
         ],
         responses: [
             new OA\Response(
@@ -54,12 +55,12 @@ class PersonalController extends Controller
     #[OA\Get(
         path: "/personal/{personal}",
         operationId: "exibirPersonal",
-        summary: "Exibir um personal específico",
         description: "Retorna os dados detalhados de um personal trainer pelo seu ID. Requer autenticação e e-mail verificado.",
+        summary: "Exibir um personal específico",
         security: [["sanctum" => []]],
         tags: ["Personais"],
         parameters: [
-            new OA\Parameter(name: "personal", in: "path", required: true, description: "ID do personal", schema: new OA\Schema(type: "integer", example: 1)),
+            new OA\Parameter(name: "personal", description: "ID do personal", in: "path", required: true, schema: new OA\Schema(type: "integer", example: 1)),
         ],
         responses: [
             new OA\Response(
@@ -81,23 +82,23 @@ class PersonalController extends Controller
     #[OA\Put(
         path: "/personal/{personal}",
         operationId: "atualizarPersonal",
-        summary: "Atualizar dados de um personal",
         description: "Atualiza parcialmente os dados de um personal trainer. Todos os campos são opcionais. Requer autenticação e e-mail verificado.",
+        summary: "Atualizar dados de um personal",
         security: [["sanctum" => []]],
-        tags: ["Personais"],
-        parameters: [
-            new OA\Parameter(name: "personal", in: "path", required: true, description: "ID do personal", schema: new OA\Schema(type: "integer", example: 1)),
-        ],
         requestBody: new OA\RequestBody(
-            required: false,
             description: "Campos a serem atualizados",
+            required: false,
             content: new OA\JsonContent(
                 properties: [
-                    new OA\Property(property: "telefone", type: "string", maxLength: 20, example: "(11) 97777-7777"),
-                    new OA\Property(property: "genero", type: "string", enum: ["masculino", "feminino", "nao_binario", "outro", "prefiro_nao_informar"], example: "feminino"),
+                    new OA\Property(property: "telefone", type: "string", example: "(11) 97777-7777", maxLength: 20),
+                    new OA\Property(property: "genero", type: "string", example: "feminino", enum: ["masculino", "feminino", "nao_binario", "outro", "prefiro_nao_informar"]),
                 ]
             )
         ),
+        tags: ["Personais"],
+        parameters: [
+            new OA\Parameter(name: "personal", description: "ID do personal", in: "path", required: true, schema: new OA\Schema(type: "integer", example: 1)),
+        ],
         responses: [
             new OA\Response(
                 response: 200,
@@ -120,12 +121,12 @@ class PersonalController extends Controller
     #[OA\Delete(
         path: "/personal/{personal}",
         operationId: "deletarPersonal",
-        summary: "Inativar um personal",
         description: "Realiza soft delete de um personal trainer. Requer autenticação e e-mail verificado.",
+        summary: "Inativar um personal",
         security: [["sanctum" => []]],
         tags: ["Personais"],
         parameters: [
-            new OA\Parameter(name: "personal", in: "path", required: true, description: "ID do personal", schema: new OA\Schema(type: "integer", example: 1)),
+            new OA\Parameter(name: "personal", description: "ID do personal", in: "path", required: true, schema: new OA\Schema(type: "integer", example: 1)),
         ],
         responses: [
             new OA\Response(
@@ -148,21 +149,21 @@ class PersonalController extends Controller
     #[OA\Post(
         path: "/personal/gerar-convite",
         operationId: "gerarConvite",
-        summary: "Gerar convite para aluno",
         description: "Gera um token de convite para vincular um aluno ao personal trainer autenticado. O aluno utilizará esse token no momento do registro. Se já existir um convite pendente para o mesmo e-mail, o existente será retornado. Requer autenticação e e-mail verificado.",
+        summary: "Gerar convite para aluno",
         security: [["sanctum" => []]],
-        tags: ["Convites"],
         requestBody: new OA\RequestBody(
-            required: true,
             description: "Dados do convite",
+            required: true,
             content: new OA\JsonContent(
                 required: ["nome", "email"],
                 properties: [
-                    new OA\Property(property: "nome", type: "string", maxLength: 255, example: "João Silva"),
-                    new OA\Property(property: "email", type: "string", format: "email", maxLength: 255, example: "joao@email.com"),
+                    new OA\Property(property: "nome", type: "string", example: "João Silva", maxLength: 255),
+                    new OA\Property(property: "email", type: "string", format: "email", example: "joao@email.com", maxLength: 255),
                 ]
             )
         ),
+        tags: ["Convites"],
         responses: [
             new OA\Response(
                 response: 200,
@@ -175,7 +176,7 @@ class PersonalController extends Controller
                             properties: [
                                 new OA\Property(property: "email", type: "string", format: "email", example: "joao@email.com"),
                                 new OA\Property(property: "token", type: "string", example: "aB3dEfGhIjKlMnOpQrStUvWxYz1234567890abcdefghijklmnopqrstuv"),
-                                new OA\Property(property: "status", type: "string", enum: ["pendente", "aceito"], example: "pendente"),
+                                new OA\Property(property: "status", type: "string", example: "pendente", enum: ["pendente", "aceito"]),
                             ],
                             type: "object"
                         ),
@@ -197,7 +198,7 @@ class PersonalController extends Controller
 
         $dados['personal_id'] = $personalId;
 
-        $convite = app(\App\Services\ConviteService::class)
+        $convite = app(ConviteService::class)
             ->gerarConvite($dados);
 
         return response()->json([
