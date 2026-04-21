@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -34,6 +34,18 @@ const GENEROS = [
 ]
 
 export function RegisterForm({
+  onSwitchMode,
+  className,
+  ...props
+}: React.ComponentPropsWithoutRef<"div"> & { onSwitchMode?: () => void }) {
+  return (
+    <Suspense>
+      <RegisterFormInner onSwitchMode={onSwitchMode} className={className} {...props} />
+    </Suspense>
+  )
+}
+
+function RegisterFormInner({
   onSwitchMode,
   className,
   ...props

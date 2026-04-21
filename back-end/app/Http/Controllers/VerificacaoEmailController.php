@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Usuario;
 use Illuminate\Auth\Events\Verified;
+use Illuminate\Support\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
@@ -44,10 +45,22 @@ class VerificacaoEmailController extends Controller
     {
         $usuario = Usuario::findOrFail($id);
 
-        // Valida a assinatura da URL
-        if (! $request->hasValidSignature()) {
+        $expires = $request->query('expires');
+        $signature = $request->query('signature');
+
+        // Confere se o link expirou
+        if (!$expires || Carbon::now()->getTimestamp() > $expires) {
             return response()->json([
                 'mensagem' => 'Link de verificação inválido ou expirado.',
+            ], 403);
+        }
+
+        // Valida a assinatura com a mesma regra independente de host do gerador
+        $expectedSignature = hash_hmac('sha256', "{$id}|{$hash}|{$expires}", config('app.key'));
+
+        if (!hash_equals((string) $signature, $expectedSignature)) {
+            return response()->json([
+                'mensagem' => 'Link de verificação inválido ou corrompido.',
             ], 403);
         }
 

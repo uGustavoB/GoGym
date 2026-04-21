@@ -66,20 +66,13 @@ class VerificarEmailNotification extends Notification implements ShouldQueue
     {
         $frontendUrl = rtrim(config('app.frontend_url', 'http://localhost:3000'), '/');
 
-        $verifyUrl = URL::temporarySignedRoute(
-            'verification.verify',
-            Carbon::now()->addMinutes($this->expiracao),
-            [
-                'id'   => $notifiable->getKey(),
-                'hash' => sha1($notifiable->getEmailForVerification()),
-            ]
-        );
-
-        $parsedUrl = parse_url($verifyUrl);
-        $query = $parsedUrl['query'] ?? '';
         $id = $notifiable->getKey();
         $hash = sha1($notifiable->getEmailForVerification());
+        $expires = Carbon::now()->addMinutes($this->expiracao)->getTimestamp();
+        
+        // Assinatura via token estrito que não depende do host ou schema da requisição web, escapando as barreiras de proxy do Docker
+        $signature = hash_hmac('sha256', "{$id}|{$hash}|{$expires}", config('app.key'));
 
-        return "{$frontendUrl}/verificar-email/callback?id={$id}&hash={$hash}&{$query}";
+        return "{$frontendUrl}/verificar-email/callback?id={$id}&hash={$hash}&expires={$expires}&signature={$signature}";
     }
 }

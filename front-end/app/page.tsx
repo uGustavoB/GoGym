@@ -52,9 +52,9 @@ export default function HomePage() {
     setCopied(false)
     try {
       const res = await gerarConviteRequest({ nome: inviteNome, email: inviteEmail })
-      // Construct frontend invite link containing token and email so it can be handled by /registrar/aluno
+      // Construct frontend invite link containing token and email so it can be handled by /auth
       const baseUrl = typeof window !== "undefined" ? window.location.origin : ""
-      const link = `${baseUrl}/registrar?tipo=aluno&token_convite=${res.convite.token}&email=${encodeURIComponent(res.convite.email)}`
+      const link = `${baseUrl}/auth?tipo=aluno&token_convite=${res.convite.token}&email=${encodeURIComponent(res.convite.email)}`
       setInviteLink(link)
       toast.success("Convite gerado com sucesso!")
       setInviteNome("")
