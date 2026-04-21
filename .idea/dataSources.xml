@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="GoGym@localhost" uuid="d8396724-c7f2-4edb-996b-1afbd793f8ab">
+    <data-source source="LOCAL" name="gogym@localhost" uuid="d8396724-c7f2-4edb-996b-1afbd793f8ab">
       <driver-ref>mysql.8</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
-      <jdbc-url>jdbc:mysql://localhost:3384/GoGym</jdbc-url>
+      <jdbc-url>jdbc:mysql://localhost:3384/gogym</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>
