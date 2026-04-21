@@ -35,20 +35,44 @@ O ecossistema divide-se em uma arquitetura robusta, focada em estabilidade no ba
 > - [Docker](https://www.docker.com/) e Docker Compose.
 > - [Node.js](https://nodejs.org/en/) (Versão 18 LTS ou superior).
 
-### 1️⃣ Subindo a API Back-end (Docker)
+### 1️⃣  Subindo a API Back-end (Docker)
 
 No terminal e na raiz do seu projeto `GoGym`:
 
-1.  Ajuste o `.env` caso necessário (os volumes e portas do Docker Compose já foram pré-configurados).
-2.  Execute e monte as dependências:
+1. Entre no diretório do back-end:
+   ```bash
+   cd back-end
+   ```
+2. Copie o arquivo de exemplo de variáveis de ambiente:
+   ```bash
+   cp .env.example .env
+   ```
+3. Edite o `.env` para configurar as credenciais do Redis e do banco de dados, se necessário (as configurações padrão já estão otimizadas para o ambiente Docker):
+   ```env
+   DB_CONNECTION=mysql
+   DB_HOST=gogym_db
+   DB_PORT=3306
+   DB_DATABASE=gogym
+   DB_USERNAME=root
+   DB_PASSWORD=secret
+
+   REDIS_HOST=gogym_redis
+   REDIS_PORT=6379
+   ```
+4. Execute e monte as dependências:
    ```bash
    docker-compose up -d --build
    ```
+5. Para acessar o terminal do contêiner PHP e rodar as migrations manualmente (caso queira verificar o processo):
+   ```bash
+   docker exec -it gogym_app bash
+   php artisan migrate
+   ```
 
 Isso fará com que o Docker levante:
-- `gogym_app`: O contêiner PHP da nossa base e API de autenticação (`localhost:8000`). Instala o Composer e popula as migrations nativamente no *build*.
-- `gogym_queue`: O worker assíncrono para despachar os Jobs do Redis.
-- `gogym_db` e `gogym_redis`: Para armazenamento de dados temporários e estáveis.
+- `gogym_app`: o contêiner PHP da nossa base e API de autenticação (`localhost:8000`). Instala o Composer e popula as migrations nativamente no *build*.
+- `gogym_queue`: o worker assíncrono para despachar os Jobs do Redis.
+- `gogym_db` e `gogym_redis`: para armazenamento de dados temporários e estáveis.
 
 (A Swagger UI já pode ser consultada sob a porta `/api/documentation`).
 
@@ -66,7 +90,7 @@ Isso fará com que o Docker levante:
    ```
 3. Espelhe variáveis de ambiente necessárias (exemplo de `.env.local` configurado):
    ```env
-   NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api
+   NEXT_PUBLIC_API_BASE_URL=http://localhost:8008/api
    ```
 4. Inície o ecossistema React:
    ```bash
@@ -81,9 +105,9 @@ Tudo pronto. O rascunho principal do projeto estará vivo em 👉 **http://local
 
 O que já foi finalizado nesta primeira etapa de validação:
 
-- ✅ **API & Client:** Separados, e arquitetura base do App Router conectada a um AuthContext.
-- ✅ **Gestão e Disparo de Emails:** Filas de `Redis` operacionais manipulando envios de SMTP para a validação de contas, envio de convites e recuperação de senhas.
-- ✅ **Documentação Mínima:** Inicializada anotações do Swagger PHP (`darkaonline/l5-swagger`).
-- ✅ **Convites de Ingresso:** Um Personal Trainer pode criar instâncias de convite em tabela e o aluno usa o _deep-link_ de e-mail para pré-popular (e bloquear dinamicamente) o seu formulário de registro unificado.
+- ✅ **API & Client:** separados, e arquitetura base do App Router conectada a um AuthContext.
+- ✅ **Gestão e Disparo de Emails:** filas de `Redis` operacionais manipulando envios de SMTP para a validação de contas, envio de convites e recuperação de senhas.
+- ✅ **Documentação Mínima:** inicializada anotações do Swagger PHP (`darkaonline/l5-swagger`).
+- ✅ **Convites de Ingresso:** um Personal Trainer pode criar instâncias de convite em tabela e o aluno usa o _deep-link_ de e-mail para pré-popular (e bloquear dinamicamente) o seu formulário de registro unificado.
 
 _Mais módulos de avaliações físicas e treinos estarão disponíveis em commits posteriores._
