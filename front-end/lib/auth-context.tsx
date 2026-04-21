@@ -41,7 +41,7 @@ interface AuthContextType extends AuthState {
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
-const PUBLIC_ROUTES = ["/login", "/registrar", "/auth", "/esqueci-senha", "/redefinir-senha"]
+const PUBLIC_ROUTES = ["/login", "/registrar", "/auth", "/esqueci-senha", "/redefinir-senha", "/verificar-email/callback"]
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -106,9 +106,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return
       }
 
-      if (state.user.email_verificado && (isPublicRoute || pathname === "/verificar-email")) {
-        router.replace("/")
-        return
+      if (state.user.email_verificado) {
+        if (pathname === "/verificar-email" || (isPublicRoute && !pathname.startsWith("/verificar-email/callback"))) {
+          router.replace("/")
+          return
+        }
       }
     }
   }, [state.isLoading, state.token, state.user, pathname, router])

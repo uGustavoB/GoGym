@@ -77,7 +77,9 @@ class VerificarEmailNotification extends Notification implements ShouldQueue
 
         $parsedUrl = parse_url($verifyUrl);
         $query = $parsedUrl['query'] ?? '';
+        $id = $notifiable->getKey();
+        $hash = sha1($notifiable->getEmailForVerification());
 
-        return $frontendUrl . '/verificar-email/' . $notifiable->getKey() . '/' . sha1($notifiable->getEmailForVerification()) . '?' . $query;
+        return "{$frontendUrl}/verificar-email/callback?id={$id}&hash={$hash}&{$query}";
     }
 }
