@@ -1,58 +1,48 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# GoGym - API Backend
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Bem-vindo ao repositório Backend do **GoGym**, uma plataforma completa de gerenciamento para Academias, Personal Trainers e Alunos.
 
-## About Laravel
+Esta API foi construída utilizando as melhores práticas do ecossistema PHP com [Laravel 11](https://laravel.com), oferecendo autenticação robusta via Sanctum, mensageria de e-mails, proteções de proxy e roteamento seguro de forma restrita e enxuta.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🚀 Tecnologias Integradas
+- **PHP 8.2+** / **Laravel 11+**
+- **Docker** para padronização minuciosa de ambientes em isolamento
+- **Laravel Sanctum** para emissão e controle de SPA Bearer Tokens
+- **Swagger / OpenAPI 3** para documentação de rotas API transparente
+- Filas Assíncronas para Automação (*Ex: Disparo de E-mails*)
+- PHPUnit configurado e mapeado para Testes Funcionais (`Feature Tests`)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🛠️ Como Instalar e Rodar
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+1. **Clone o repositório e instale as dependências**
+   ```bash
+   composer install
+   ```
 
-## Learning Laravel
+2. **Setup do Arquivo `.env`**
+   Crie sua cópia do arquivo de ambiente base:
+   ```bash
+   cp .env.example .env
+   ```
+   Certifique-se de configurar e preencher perfeitamente os contatos do Banco de Dados, E-Mail Mailer (SMTP), além da Variável mais crítica para ponte com a Interface Next.js:
+   ```dotenv
+    APP_FRONTEND_URL=http://localhost:3000
+   ```
+   
+3. **Gerar chaves mestras da Aplicação e a População de Dados (Seeders)**
+   ```bash
+   php artisan key:generate
+   php artisan migrate --seed
+   ```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 📖 Documentação Endpoints (Swagger API)
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Tornou-se muito fácil entender os modelos de contratos JSON no Frontend por conta dos mapeamentos no Swagger. O projeto utiliza anotações nativas nas `Controllers` extraídas na raiz do arquivo da Collection (`gogym.json` ou exportações no Swagger UI). 
+Lidamos ativamente com atributos PHP (`#[OA\Get]`, `#[OA\Post]`) de forma profissional.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## 🔐 Padrões de Segurança - Verificação via E-mail
+Para solucionar problemas corriqueiros de roteamento entre contêineres e proxy da máquina Host, a Verificação de E-mail (**Verification Email**) foi projetada para *ignorar* restrições estritas do Helper nativo de URL da Laravel (`temporarySignedRoute()`).
+Em vez disso, utilizamos arquitetura de Token HMAC customizado, o que nos permitiu injetar a URL do frontend com Queries independentes, deixando a checagem no `VerificacaoEmailController.php` inteiramente resistente aos *binds* erráticos de IP e Portas do Docker.
 
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
-```
-
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+*Back-end escrito e mantido focado sempre em alto desempenho para a saúde e treinos dos nossos usuários!*

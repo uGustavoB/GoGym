@@ -50,13 +50,13 @@ No terminal e na raiz do seu projeto `GoGym`:
 3. Edite o `.env` para configurar as credenciais do Redis e do banco de dados, se necessário (as configurações padrão já estão otimizadas para o ambiente Docker):
    ```env
    DB_CONNECTION=mysql
-   DB_HOST=gogym_db
+   DB_HOST=db
    DB_PORT=3306
    DB_DATABASE=gogym
    DB_USERNAME=root
-   DB_PASSWORD=secret
+   DB_PASSWORD=rootpassword
 
-   REDIS_HOST=gogym_redis
+   REDIS_HOST=redis
    REDIS_PORT=6379
    ```
 4. Execute e monte as dependências:
