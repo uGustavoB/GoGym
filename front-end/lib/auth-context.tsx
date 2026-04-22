@@ -14,6 +14,7 @@ import {
   type RegisterPersonalData,
   type RegisterAlunoData,
   type ApiError,
+  type PersonalVinculado,
 } from "@/lib/api"
 
 interface User {
@@ -28,6 +29,7 @@ interface AuthState {
   token: string | null
   tipoPerfil: string | null
   perfilId: number | null
+  personalVinculado: PersonalVinculado | null
   isLoading: boolean
 }
 
@@ -51,6 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     token: null,
     tipoPerfil: null,
     perfilId: null,
+    personalVinculado: null,
     isLoading: true,
   })
 
@@ -62,6 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user: profile.usuario,
         tipoPerfil: profile.tipo_perfil,
         perfilId: profile.perfil_id,
+        personalVinculado: profile.personal_vinculado ?? null,
         isLoading: false,
       }))
     } catch {
@@ -71,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         token: null,
         tipoPerfil: null,
         perfilId: null,
+        personalVinculado: null,
         isLoading: false,
       })
     }
@@ -126,6 +131,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user: profile.usuario,
       tipoPerfil: profile.tipo_perfil,
       perfilId: profile.perfil_id,
+      personalVinculado: profile.personal_vinculado ?? null,
     }))
 
     if (profile.usuario.email_verificado) {
@@ -146,6 +152,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user: profile.usuario,
       tipoPerfil: profile.tipo_perfil,
       perfilId: profile.perfil_id,
+      personalVinculado: profile.personal_vinculado ?? null,
     }))
 
     router.replace("/verificar-email")
@@ -162,6 +169,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user: profile.usuario,
       tipoPerfil: profile.tipo_perfil,
       perfilId: profile.perfil_id,
+      personalVinculado: profile.personal_vinculado ?? null,
     }))
 
     router.replace("/verificar-email")
@@ -179,6 +187,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       token: null,
       tipoPerfil: null,
       perfilId: null,
+      personalVinculado: null,
       isLoading: false,
     })
     router.replace("/auth")

@@ -1,11 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { motion } from "framer-motion"
+import type { Variants } from "framer-motion"
 import {
-  Dumbbell,
-  User,
   Mail,
   Phone,
   Shield,
@@ -13,18 +11,13 @@ import {
   UserX,
 } from "lucide-react"
 import {
-  listarAlunosRequest,
-  exibirPersonalRequest,
-  type PersonalResource,
-} from "@/lib/api"
-import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Badge } from "@/components/ui/badge"
 
 const GENERO_LABELS: Record<string, string> = {
   masculino: "Masculino",
@@ -33,8 +26,6 @@ const GENERO_LABELS: Record<string, string> = {
   outro: "Outro",
   prefiro_nao_informar: "Prefiro não informar",
 }
-
-import type { Variants } from "framer-motion"
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 20 },
@@ -68,55 +59,9 @@ function InfoRow({
 }
 
 export default function MeuPersonalPage() {
-  const { perfilId } = useAuth()
-  const [personal, setPersonal] = useState<PersonalResource | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [notLinked, setNotLinked] = useState(false)
+  const { personalVinculado } = useAuth()
 
-  useEffect(() => {
-    // The aluno's linked personal can be discovered via the aluno listing
-    // which returns status_vinculo. We try to fetch the personal list to find
-    // the linked one. This is a workaround since the API doesn't have a direct
-    // "my personal" endpoint — we use GET /personal which returns all, and the
-    // aluno can see relevant data.
-    async function fetchPersonal() {
-      try {
-        const res = await listarAlunosRequest(1)
-        // In the aluno context, the API returns the aluno's own data
-        // The personal info is obtained through the personal listing
-        const personaisRes = await (await import("@/lib/api")).listarPersonaisRequest(1)
-        if (personaisRes.data.length > 0) {
-          // Show the first personal (the one linked to this aluno)
-          const p = personaisRes.data[0]
-          // Fetch full details
-          const fullPersonal = await exibirPersonalRequest(p.id)
-          setPersonal(fullPersonal.data)
-        } else {
-          setNotLinked(true)
-        }
-      } catch {
-        setNotLinked(true)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchPersonal()
-  }, [perfilId])
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="space-y-1">
-          <Skeleton className="h-7 w-48" />
-          <Skeleton className="h-4 w-72" />
-        </div>
-        <Skeleton className="h-72 max-w-lg" />
-      </div>
-    )
-  }
-
-  if (notLinked || !personal) {
+  if (!personalVinculado) {
     return (
       <div className="space-y-6">
         <motion.div initial="hidden" animate="visible" custom={0} variants={fadeUp}>
@@ -148,14 +93,19 @@ export default function MeuPersonalPage() {
     )
   }
 
-  const initials = personal.nome
-    ? personal.nome
+  const initials = personalVinculado.nome
+    ? personalVinculado.nome
         .split(" ")
         .map((n) => n[0])
         .slice(0, 2)
         .join("")
         .toUpperCase()
     : "PT"
+
+  const STATUS_LABELS: Record<string, string> = {
+    ativo: "Ativo",
+    inativo: "Inativo",
+  }
 
   return (
     <div className="space-y-6">
@@ -177,33 +127,45 @@ export default function MeuPersonalPage() {
                   {initials}
                 </AvatarFallback>
               </Avatar>
-              <div>
+              <div className="flex-1">
                 <CardTitle className="text-lg">
-                  {personal.nome || "Personal Trainer"}
+                  {personalVinculado.nome || "Personal Trainer"}
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
                   Personal Trainer
                 </p>
               </div>
+              {personalVinculado.status_vinculo && (
+                <Badge
+                  variant={personalVinculado.status_vinculo === "ativo" ? "default" : "secondary"}
+                  className={
+                    personalVinculado.status_vinculo === "ativo"
+                      ? "bg-primary/10 text-primary hover:bg-primary/20"
+                      : ""
+                  }
+                >
+                  {STATUS_LABELS[personalVinculado.status_vinculo] || personalVinculado.status_vinculo}
+                </Badge>
+              )}
             </div>
           </CardHeader>
           <CardContent className="space-y-0 divide-y">
             <InfoRow
               icon={Mail}
               label="E-mail"
-              value={personal.email}
+              value={personalVinculado.email}
             />
             <InfoRow
               icon={Phone}
               label="Telefone"
-              value={personal.telefone}
+              value={personalVinculado.telefone}
             />
             <InfoRow
               icon={Shield}
               label="Gênero"
               value={
-                personal.genero
-                  ? GENERO_LABELS[personal.genero] || personal.genero
+                personalVinculado.genero
+                  ? GENERO_LABELS[personalVinculado.genero] || personalVinculado.genero
                   : null
               }
             />
@@ -211,8 +173,8 @@ export default function MeuPersonalPage() {
               icon={Calendar}
               label="Membro desde"
               value={
-                personal.cadastrado_em
-                  ? new Date(personal.cadastrado_em).toLocaleDateString("pt-BR")
+                personalVinculado.cadastrado_em
+                  ? new Date(personalVinculado.cadastrado_em).toLocaleDateString("pt-BR")
                   : null
               }
             />

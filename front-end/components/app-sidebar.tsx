@@ -120,7 +120,7 @@ export function AppSidebar() {
                   className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
                   <Avatar className="h-8 w-8 rounded-lg">
-                    <AvatarFallback className="rounded-lg bg-primary/10 text-primary text-xs font-semibold">
+                    <AvatarFallback className="rounded-lg bg-transparent text-primary text-xs font-semibold">
                       {initials}
                     </AvatarFallback>
                   </Avatar>

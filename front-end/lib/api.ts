@@ -75,6 +75,16 @@ export interface RegisterResponse {
   token: string
 }
 
+export interface PersonalVinculado {
+  id: number
+  nome: string | null
+  email: string | null
+  telefone: string
+  genero: string
+  status_vinculo: string
+  cadastrado_em: string
+}
+
 export interface ProfileResponse {
   usuario: {
     id: number
@@ -84,6 +94,7 @@ export interface ProfileResponse {
   }
   tipo_perfil: "personal" | "aluno" | "incompleto"
   perfil_id: number | null
+  personal_vinculado?: PersonalVinculado | null
 }
 
 export interface MessageResponse {
@@ -250,14 +261,4 @@ export function exibirAlunoRequest(id: number) {
 
 export function deletarAlunoRequest(id: number) {
   return api<MessageResponse>(`/aluno/${id}`, { method: "DELETE" })
-}
-
-// ── Personal Endpoints ──
-
-export function listarPersonaisRequest(page: number = 1) {
-  return api<PaginatedResponse<PersonalResource>>(`/personal?page=${page}`)
-}
-
-export function exibirPersonalRequest(id: number) {
-  return api<{ data: PersonalResource }>(`/personal/${id}`)
 }

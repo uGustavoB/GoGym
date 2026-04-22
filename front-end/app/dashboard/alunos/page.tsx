@@ -181,9 +181,9 @@ export default function AlunosPage() {
           <CardContent>
             {inviteLink ? (
               <div className="space-y-3">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
                   <div
-                    className="flex-1 overflow-x-hidden truncate rounded-md border bg-muted px-3 py-2 text-sm"
+                    className="min-w-0 flex-1 overflow-hidden rounded-md border bg-muted px-3 py-2 text-sm break-all"
                     title={inviteLink}
                   >
                     {inviteLink}
@@ -350,17 +350,17 @@ export default function AlunosPage() {
                             <TableCell>
                               <Badge
                                 variant={
-                                  aluno.status_conta === "Ativo"
+                                  aluno.status_vinculo === "ativo"
                                     ? "default"
                                     : "secondary"
                                 }
                                 className={
-                                  aluno.status_conta === "Ativo"
+                                  aluno.status_vinculo === "ativo"
                                     ? "bg-primary/10 text-primary hover:bg-primary/20"
                                     : ""
                                 }
                               >
-                                {aluno.status_conta}
+                                {aluno.status_vinculo === "ativo" ? "Ativo" : "Inativo"}
                               </Badge>
                             </TableCell>
                             <TableCell className="text-right">
