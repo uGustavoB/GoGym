@@ -28,6 +28,10 @@ class AlunoController extends Controller
         tags: ["Alunos"],
         parameters: [
             new OA\Parameter(name: "page", description: "Número da página", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 1)),
+            new OA\Parameter(name: "nome", description: "Filtro parcial por nome do aluno", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "email", description: "Filtro parcial por e-mail do aluno", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "telefone", description: "Filtro parcial por telefone do aluno", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "status", description: "Filtro por status do vínculo (ex: ativo, inativo)", in: "query", required: false, schema: new OA\Schema(type: "string", enum: ["ativo", "inativo"])),
         ],
         responses: [
             new OA\Response(
@@ -47,7 +51,8 @@ class AlunoController extends Controller
     )]
     public function index(Request $requisicao)
     {
-        $alunos = $this->servico->listar($requisicao->user());
+        $filtros = $requisicao->only(['nome', 'email', 'telefone', 'status']);
+        $alunos = $this->servico->listar($requisicao->user(), $filtros);
         return AlunoResource::collection($alunos);
     }
 

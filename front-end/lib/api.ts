@@ -251,8 +251,22 @@ export interface PaginatedResponse<T> {
 
 // ── Aluno Endpoints ──
 
-export function listarAlunosRequest(page: number = 1) {
-  return api<PaginatedResponse<AlunoResource>>(`/aluno?page=${page}`)
+export interface AlunoFilters {
+  nome?: string
+  email?: string
+  telefone?: string
+  status?: "ativo" | "inativo" | ""
+}
+
+export function listarAlunosRequest(page: number = 1, filters: AlunoFilters = {}) {
+  const params = new URLSearchParams({ page: page.toString() })
+  
+  if (filters.nome) params.append("nome", filters.nome)
+  if (filters.email) params.append("email", filters.email)
+  if (filters.telefone) params.append("telefone", filters.telefone)
+  if (filters.status) params.append("status", filters.status)
+
+  return api<PaginatedResponse<AlunoResource>>(`/aluno?${params.toString()}`)
 }
 
 export function exibirAlunoRequest(id: number) {

@@ -14,13 +14,35 @@ class AlunoService
         private ConviteService $conviteService
     ) {}
 
-    public function listar($usuarioLogado)
+    public function listar($usuarioLogado, array $filtros = [])
     {
         $personal = $usuarioLogado->personal;
 
         // Se for personal, retornar apenas alunos dele.
         if ($personal) {
-            return $personal->alunos()->with('usuario')->paginate(15);
+            $query = $personal->alunos()->with('usuario');
+
+            if (!empty($filtros['nome'])) {
+                $query->whereHas('usuario', function ($q) use ($filtros) {
+                    $q->where('nome', 'LIKE', '%' . $filtros['nome'] . '%');
+                });
+            }
+
+            if (!empty($filtros['email'])) {
+                $query->whereHas('usuario', function ($q) use ($filtros) {
+                    $q->where('email', 'LIKE', '%' . $filtros['email'] . '%');
+                });
+            }
+
+            if (!empty($filtros['telefone'])) {
+                $query->where('telefone', 'LIKE', '%' . $filtros['telefone'] . '%');
+            }
+
+            if (!empty($filtros['status'])) {
+                $query->wherePivot('status', $filtros['status']);
+            }
+
+            return $query->paginate(15);
         }
 
         // Se for aluno, retornar apenas ele mesmo.

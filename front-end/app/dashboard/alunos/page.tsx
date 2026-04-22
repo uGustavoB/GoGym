@@ -12,6 +12,7 @@ import {
   CheckCheck,
   Link as LinkIcon,
   Search,
+  Filter,
 } from "lucide-react"
 import {
   listarAlunosRequest,
@@ -19,6 +20,7 @@ import {
   gerarConviteRequest,
   type AlunoResource,
   type PaginatedResponse,
+  type AlunoFilters,
 } from "@/lib/api"
 import {
   Card,
@@ -48,8 +50,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { toast } from "sonner"
-
 import type { Variants } from "framer-motion"
 
 const fadeUp: Variants = {
@@ -74,13 +87,15 @@ export default function AlunosPage() {
   const [inviteLink, setInviteLink] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
 
-  // Search
-  const [search, setSearch] = useState("")
+  // Filters
+  const [filters, setFilters] = useState<AlunoFilters>({})
+  const [tempFilters, setTempFilters] = useState<AlunoFilters>({})
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
 
-  const fetchAlunos = useCallback(async (p: number) => {
+  const fetchAlunos = useCallback(async (p: number, currentFilters: AlunoFilters) => {
     setLoading(true)
     try {
-      const res = await listarAlunosRequest(p)
+      const res = await listarAlunosRequest(p, currentFilters)
       setAlunos(res.data)
       setMeta(res.meta)
     } catch {
@@ -91,8 +106,8 @@ export default function AlunosPage() {
   }, [])
 
   useEffect(() => {
-    fetchAlunos(page)
-  }, [page, fetchAlunos])
+    fetchAlunos(page, filters)
+  }, [page, filters, fetchAlunos])
 
   const handleUnlink = async () => {
     if (!unlinkTarget) return
@@ -101,7 +116,7 @@ export default function AlunosPage() {
       await deletarAlunoRequest(unlinkTarget.id)
       toast.success(`${unlinkTarget.nome} foi desvinculado com sucesso.`)
       setUnlinkTarget(null)
-      fetchAlunos(page)
+      fetchAlunos(page, filters)
     } catch {
       toast.error("Erro ao desvincular aluno.")
     } finally {
@@ -142,13 +157,28 @@ export default function AlunosPage() {
     }
   }
 
-  const filteredAlunos = search
-    ? alunos.filter(
-        (a) =>
-          a.nome.toLowerCase().includes(search.toLowerCase()) ||
-          a.email.toLowerCase().includes(search.toLowerCase())
-      )
-    : alunos
+  const applyFilters = () => {
+    setPage(1) // Reset pagination on new filter
+    setFilters(tempFilters)
+    setIsFilterOpen(false)
+  }
+
+  const clearFilters = () => {
+    setTempFilters({})
+    setFilters({})
+    setPage(1)
+    setIsFilterOpen(false)
+  }
+
+  // Quick search using the main search bar just applies to `nome`
+  const handleQuickSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      setPage(1)
+      setFilters((prev) => ({ ...prev, nome: tempFilters.nome }))
+    }
+  }
+
+  const activeFiltersCount = Object.values(filters).filter((val) => val && val.trim() !== "").length
 
   return (
     <div className="space-y-6">
@@ -162,11 +192,7 @@ export default function AlunosPage() {
       </motion.div>
 
       {/* Invite Section */}
-      <motion.div
-        initial="hidden"
-        animate="visible"
-        variants={fadeUp}
-      >
+      <motion.div initial="hidden" animate="visible" variants={fadeUp}>
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
@@ -174,8 +200,7 @@ export default function AlunosPage() {
               Convidar Aluno
             </CardTitle>
             <CardDescription>
-              Gere um link de convite para que um aluno se cadastre vinculado a
-              você.
+              Gere um link de convite para que um aluno se cadastre vinculado a você.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -201,11 +226,7 @@ export default function AlunosPage() {
                     )}
                   </Button>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setInviteLink(null)}
-                >
+                <Button variant="outline" size="sm" onClick={() => setInviteLink(null)}>
                   Gerar Novo Convite
                 </Button>
               </div>
@@ -232,14 +253,8 @@ export default function AlunosPage() {
                     disabled={isGenerating}
                   />
                 </div>
-                <Button
-                  onClick={handleGerarConvite}
-                  disabled={isGenerating}
-                  className="shrink-0"
-                >
-                  {isGenerating && (
-                    <Loader2 className="mr-2 size-4 animate-spin" />
-                  )}
+                <Button onClick={handleGerarConvite} disabled={isGenerating} className="shrink-0">
+                  {isGenerating && <Loader2 className="mr-2 size-4 animate-spin" />}
                   Gerar Convite
                 </Button>
               </div>
@@ -249,11 +264,7 @@ export default function AlunosPage() {
       </motion.div>
 
       {/* Student List */}
-      <motion.div
-        initial="hidden"
-        animate="visible"
-        variants={fadeUp}
-      >
+      <motion.div initial="hidden" animate="visible" variants={fadeUp}>
         <Card>
           <CardHeader>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -268,14 +279,95 @@ export default function AlunosPage() {
                     : "Carregando..."}
                 </CardDescription>
               </div>
-              <div className="relative w-full sm:w-64">
-                <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar aluno..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9"
-                />
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <div className="relative flex-1 sm:w-64">
+                  <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar pelo nome (Enter)..."
+                    value={tempFilters.nome || ""}
+                    onChange={(e) => setTempFilters({ ...tempFilters, nome: e.target.value })}
+                    onKeyDown={handleQuickSearch}
+                    className="pl-9"
+                  />
+                </div>
+                <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="relative shrink-0">
+                      <Filter className="mr-2 size-4" />
+                      Filtros
+                      {activeFiltersCount > 0 && (
+                        <Badge className="absolute -right-2 -top-2 flex size-5 items-center justify-center rounded-full p-0">
+                          {activeFiltersCount}
+                        </Badge>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80" align="end">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <h4 className="font-medium leading-none">Filtros Avançados</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Refine sua busca detalhadamente.
+                        </p>
+                      </div>
+                      <div className="grid gap-3">
+                        <div className="grid gap-1.5">
+                          <Label htmlFor="filter-nome">Nome</Label>
+                          <Input
+                            id="filter-nome"
+                            placeholder="Buscar nome"
+                            value={tempFilters.nome || ""}
+                            onChange={(e) => setTempFilters({ ...tempFilters, nome: e.target.value })}
+                          />
+                        </div>
+                        <div className="grid gap-1.5">
+                          <Label htmlFor="filter-email">E-mail</Label>
+                          <Input
+                            id="filter-email"
+                            placeholder="Buscar e-mail"
+                            value={tempFilters.email || ""}
+                            onChange={(e) => setTempFilters({ ...tempFilters, email: e.target.value })}
+                          />
+                        </div>
+                        <div className="grid gap-1.5">
+                          <Label htmlFor="filter-telefone">Telefone</Label>
+                          <Input
+                            id="filter-telefone"
+                            placeholder="Buscar telefone"
+                            value={tempFilters.telefone || ""}
+                            onChange={(e) => setTempFilters({ ...tempFilters, telefone: e.target.value })}
+                          />
+                        </div>
+                        <div className="grid gap-1.5">
+                          <Label>Status do Vínculo</Label>
+                          <Select
+                            value={tempFilters.status || "todos"}
+                            onValueChange={(val) =>
+                              setTempFilters({ ...tempFilters, status: val === "todos" ? "" : (val as "ativo" | "inativo") })
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Qualquer status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="todos">Qualquer status</SelectItem>
+                              <SelectItem value="ativo">Ativo</SelectItem>
+                              <SelectItem value="inativo">Inativo</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 border-t pt-4">
+                        <Button variant="ghost" size="sm" onClick={clearFilters}>
+                          Limpar Tudo
+                        </Button>
+                        <Button size="sm" onClick={applyFilters}>
+                          Aplicar Filtros
+                        </Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
           </CardHeader>
@@ -293,15 +385,15 @@ export default function AlunosPage() {
                   </div>
                 ))}
               </div>
-            ) : filteredAlunos.length === 0 ? (
+            ) : alunos.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
                   <Users className="size-7 text-muted-foreground" />
                 </div>
                 <h3 className="text-lg font-medium">Nenhum aluno encontrado</h3>
                 <p className="mt-1 text-sm text-muted-foreground max-w-sm">
-                  {search
-                    ? "Nenhum resultado para sua busca. Tente outro termo."
+                  {Object.keys(filters).length > 0
+                    ? "Nenhum resultado para os filtros atuais. Tente ajustar os parâmetros de busca."
                     : "Envie um convite acima para vincular seu primeiro aluno."}
                 </p>
               </div>
@@ -312,19 +404,15 @@ export default function AlunosPage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Nome</TableHead>
-                        <TableHead className="hidden md:table-cell">
-                          E-mail
-                        </TableHead>
-                        <TableHead className="hidden lg:table-cell">
-                          Telefone
-                        </TableHead>
+                        <TableHead className="hidden md:table-cell">E-mail</TableHead>
+                        <TableHead className="hidden lg:table-cell">Telefone</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       <AnimatePresence>
-                        {filteredAlunos.map((aluno) => (
+                        {alunos.map((aluno) => (
                           <motion.tr
                             key={aluno.id}
                             initial={{ opacity: 0 }}
@@ -332,9 +420,7 @@ export default function AlunosPage() {
                             exit={{ opacity: 0 }}
                             className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
                           >
-                            <TableCell className="font-medium">
-                              {aluno.nome}
-                            </TableCell>
+                            <TableCell className="font-medium">{aluno.nome}</TableCell>
                             <TableCell className="hidden md:table-cell">
                               <span className="flex items-center gap-1.5 text-muted-foreground">
                                 <Mail className="size-3.5" />
@@ -349,11 +435,7 @@ export default function AlunosPage() {
                             </TableCell>
                             <TableCell>
                               <Badge
-                                variant={
-                                  aluno.status_vinculo === "ativo"
-                                    ? "default"
-                                    : "secondary"
-                                }
+                                variant={aluno.status_vinculo === "ativo" ? "default" : "secondary"}
                                 className={
                                   aluno.status_vinculo === "ativo"
                                     ? "bg-primary/10 text-primary hover:bg-primary/20"
@@ -383,7 +465,7 @@ export default function AlunosPage() {
 
                 {/* Pagination */}
                 {meta && meta.last_page > 1 && (
-                  <div className="mt-4 flex items-center justify-between">
+                  <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <p className="text-sm text-muted-foreground">
                       Página {meta.current_page} de {meta.last_page}
                     </p>
@@ -414,32 +496,20 @@ export default function AlunosPage() {
       </motion.div>
 
       {/* Unlink Confirmation Dialog */}
-      <Dialog
-        open={!!unlinkTarget}
-        onOpenChange={(open) => !open && setUnlinkTarget(null)}
-      >
+      <Dialog open={!!unlinkTarget} onOpenChange={(open) => !open && setUnlinkTarget(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Desvincular Aluno</DialogTitle>
             <DialogDescription>
-              Tem certeza que deseja desvincular{" "}
-              <strong>{unlinkTarget?.nome}</strong>? Esta ação irá inativar o
-              vínculo do aluno com seu perfil.
+              Tem certeza que deseja desvincular <strong>{unlinkTarget?.nome}</strong>? Esta ação
+              irá inativar o vínculo do aluno com seu perfil.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setUnlinkTarget(null)}
-              disabled={unlinking}
-            >
+            <Button variant="outline" onClick={() => setUnlinkTarget(null)} disabled={unlinking}>
               Cancelar
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleUnlink}
-              disabled={unlinking}
-            >
+            <Button variant="destructive" onClick={handleUnlink} disabled={unlinking}>
               {unlinking && <Loader2 className="mr-2 size-4 animate-spin" />}
               Confirmar Desvinculação
             </Button>

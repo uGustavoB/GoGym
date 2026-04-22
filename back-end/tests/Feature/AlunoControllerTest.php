@@ -32,6 +32,41 @@ class AlunoControllerTest extends TestCase
         $this->assertEquals($alunoVinculado->id, $resposta->json('data.0.id'));
     }
 
+    public function test_listar_alunos_com_filtros_retorna_corretamente()
+    {
+        $usuarioPersonal = Usuario::factory()->create();
+        $personal = Personal::factory()->create(['usuario_id' => $usuarioPersonal->id]);
+
+        // Aluno 1: João, ativo
+        $user1 = Usuario::factory()->create(['nome' => 'João Silva', 'email' => 'joao@email.com']);
+        $aluno1 = Aluno::factory()->create(['usuario_id' => $user1->id, 'telefone' => '11999999999']);
+
+        // Aluno 2: Maria, inativo
+        $user2 = Usuario::factory()->create(['nome' => 'Maria Souza', 'email' => 'maria@email.com']);
+        $aluno2 = Aluno::factory()->create(['usuario_id' => $user2->id, 'telefone' => '11888888888']);
+
+        $personal->alunos()->attach($aluno1, ['status' => 'ativo']);
+        $personal->alunos()->attach($aluno2, ['status' => 'inativo']);
+
+        // Testar filtro por nome
+        $resposta = $this->actingAs($usuarioPersonal, 'sanctum')->getJson('/api/aluno?nome=João');
+        $resposta->assertStatus(200);
+        $this->assertCount(1, $resposta->json('data'));
+        $this->assertEquals($aluno1->id, $resposta->json('data.0.id'));
+
+        // Testar filtro por status
+        $respostaStatus = $this->actingAs($usuarioPersonal, 'sanctum')->getJson('/api/aluno?status=inativo');
+        $respostaStatus->assertStatus(200);
+        $this->assertCount(1, $respostaStatus->json('data'));
+        $this->assertEquals($aluno2->id, $respostaStatus->json('data.0.id'));
+
+        // Testar filtro por email
+        $respostaEmail = $this->actingAs($usuarioPersonal, 'sanctum')->getJson('/api/aluno?email=maria');
+        $respostaEmail->assertStatus(200);
+        $this->assertCount(1, $respostaEmail->json('data'));
+        $this->assertEquals($aluno2->id, $respostaEmail->json('data.0.id'));
+    }
+
     public function test_listar_alunos_sendo_aluno_retorna_ele_mesmo()
     {
         $usuarioAluno = Usuario::factory()->create();
