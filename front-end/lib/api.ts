@@ -190,4 +190,74 @@ export function gerarConviteRequest(data: { nome: string, email: string }) {
   })
 }
 
+// ── Resource Interfaces ──
 
+export interface AlunoResource {
+  id: number
+  nome: string
+  email: string
+  telefone: string
+  genero: string | null
+  dados_fisicos: {
+    peso: number | null
+    altura: number | null
+    data_nascimento: string | null
+  }
+  status_vinculo: string | null
+  status_conta: "Ativo" | "Inativo"
+  cadastrado_em: string
+}
+
+export interface PersonalResource {
+  id: number
+  usuario_id: number
+  nome?: string
+  email?: string
+  telefone: string
+  genero: string
+  cadastrado_em: string
+  atualizado_em: string
+  deletado_em: string | null
+}
+
+export interface PaginatedResponse<T> {
+  data: T[]
+  links: {
+    first: string | null
+    last: string | null
+    prev: string | null
+    next: string | null
+  }
+  meta: {
+    current_page: number
+    from: number
+    last_page: number
+    per_page: number
+    to: number
+    total: number
+  }
+}
+
+// ── Aluno Endpoints ──
+
+export function listarAlunosRequest(page: number = 1) {
+  return api<PaginatedResponse<AlunoResource>>(`/aluno?page=${page}`)
+}
+
+export function exibirAlunoRequest(id: number) {
+  return api<{ data: AlunoResource }>(`/aluno/${id}`)
+}
+
+export function deletarAlunoRequest(id: number) {
+  return api<MessageResponse>(`/aluno/${id}`, { method: "DELETE" })
+}
+
+// ── Personal Endpoints ──
+
+export function listarPersonaisRequest(page: number = 1) {
+  return api<PaginatedResponse<PersonalResource>>(`/personal?page=${page}`)
+}
+
+export function exibirPersonalRequest(id: number) {
+  return api<{ data: PersonalResource }>(`/personal/${id}`)
+}

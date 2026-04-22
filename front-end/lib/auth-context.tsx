@@ -108,7 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (state.user.email_verificado) {
         if (pathname === "/verificar-email" || (isPublicRoute && !pathname.startsWith("/verificar-email/callback"))) {
-          router.replace("/")
+          router.replace("/dashboard")
           return
         }
       }
@@ -129,7 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }))
 
     if (profile.usuario.email_verificado) {
-      router.replace("/")
+      router.replace("/dashboard")
     } else {
       router.replace("/verificar-email")
     }
