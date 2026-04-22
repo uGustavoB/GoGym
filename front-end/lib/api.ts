@@ -18,6 +18,8 @@ export function clearToken() {
   localStorage.removeItem("gogym_token")
 }
 
+const pendingRequests = new Map<string, Promise<any>>();
+
 export async function api<T = unknown>(
   endpoint: string,
   options: RequestInit = {}
@@ -34,25 +36,45 @@ export async function api<T = unknown>(
     headers["Authorization"] = `Bearer ${token}`
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-  })
+  const isGet = !options.method || options.method.toUpperCase() === "GET";
+  const cacheKey = isGet ? `${endpoint}` : null;
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({
-      message: "Erro de conexão com o servidor.",
-    }))
-
-    const error: ApiError = {
-      message: errorData.message || errorData.mensagem || "Erro desconhecido.",
-      errors: errorData.errors,
-    }
-
-    throw error
+  if (cacheKey && pendingRequests.has(cacheKey)) {
+    return pendingRequests.get(cacheKey) as Promise<T>;
   }
 
-  return response.json() as Promise<T>
+  const promise = (async () => {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers,
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({
+        message: "Erro de conexão com o servidor.",
+      }))
+
+      const error: ApiError = {
+        message: errorData.message || errorData.mensagem || "Erro desconhecido.",
+        errors: errorData.errors,
+      }
+
+      throw error
+    }
+
+    return response.json() as Promise<T>
+  })();
+
+  if (cacheKey) {
+    pendingRequests.set(cacheKey, promise);
+    promise
+      .finally(() => {
+        pendingRequests.delete(cacheKey);
+      })
+      .catch(() => {});
+  }
+
+  return promise;
 }
 
 // ── Auth endpoints ──
@@ -258,7 +280,7 @@ export interface AlunoFilters {
   status?: "ativo" | "inativo" | ""
 }
 
-export function listarAlunosRequest(page: number = 1, filters: AlunoFilters = {}) {
+export function listarAlunosRequest(page: number = 1, filters: AlunoFilters = {}, options?: RequestInit) {
   const params = new URLSearchParams({ page: page.toString() })
   
   if (filters.nome) params.append("nome", filters.nome)
@@ -266,11 +288,11 @@ export function listarAlunosRequest(page: number = 1, filters: AlunoFilters = {}
   if (filters.telefone) params.append("telefone", filters.telefone)
   if (filters.status) params.append("status", filters.status)
 
-  return api<PaginatedResponse<AlunoResource>>(`/aluno?${params.toString()}`)
+  return api<PaginatedResponse<AlunoResource>>(`/aluno?${params.toString()}`, options)
 }
 
-export function exibirAlunoRequest(id: number) {
-  return api<{ data: AlunoResource }>(`/aluno/${id}`)
+export function exibirAlunoRequest(id: number, options?: RequestInit) {
+  return api<{ data: AlunoResource }>(`/aluno/${id}`, options)
 }
 
 export function deletarAlunoRequest(id: number) {
