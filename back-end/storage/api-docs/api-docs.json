@@ -38,6 +38,46 @@
                             "type": "integer",
                             "default": 1
                         }
+                    },
+                    {
+                        "name": "nome",
+                        "in": "query",
+                        "description": "Filtro parcial por nome do aluno",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "email",
+                        "in": "query",
+                        "description": "Filtro parcial por e-mail do aluno",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "telefone",
+                        "in": "query",
+                        "description": "Filtro parcial por telefone do aluno",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filtro por status do vínculo (ex: ativo, inativo)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "ativo",
+                                "inativo"
+                            ]
+                        }
                     }
                 ],
                 "responses": {
