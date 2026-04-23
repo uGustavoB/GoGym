@@ -11,15 +11,19 @@ class FichaTreinoService
 {
     public function listar(): LengthAwarePaginator
     {
-        return FichaTreino::with(['aluno.usuario'])
-            ->orderByDesc('created_at')
-            ->paginate(15);
+        return FichaTreino::with([
+            'semanas' => fn ($query) => $query->orderBy('numero_semana'),
+            'rotinas' => fn ($query) => $query->orderBy('letra_nome'),
+            'rotinas.exercicios' => fn ($query) => $query->orderBy('ordem'),
+            'rotinas.exercicios.exercicio',
+        ])
+        ->orderByDesc('created_at')
+        ->paginate(15);
     }
 
     public function buscarComRelacionamentos(FichaTreino $fichaTreino): FichaTreino
     {
         return $fichaTreino->load([
-            'aluno.usuario',
             'semanas' => fn ($query) => $query->orderBy('numero_semana'),
             'rotinas' => fn ($query) => $query->orderBy('letra_nome'),
             'rotinas.exercicios' => fn ($query) => $query->orderBy('ordem'),
