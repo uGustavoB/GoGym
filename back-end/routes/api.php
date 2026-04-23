@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AlunoController;
+use App\Http\Controllers\ExercicioController;
+use App\Http\Controllers\FichaTreinoController;
 use App\Http\Controllers\PersonalController;
 use App\Http\Controllers\VerificacaoEmailController;
 use Illuminate\Support\Facades\Route;
@@ -38,5 +40,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
         //  Rotas para CRUD de alunos
         Route::apiResource('aluno', AlunoController::class);
+
+        //  Rotas para Gestão de Treinos
+        Route::apiResource('exercicio', ExercicioController::class);
+        Route::apiResource('ficha-treino', FichaTreinoController::class)->except(['update']);
     });
 });
+
