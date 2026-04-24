@@ -28,4 +28,9 @@ class RotinaSessao extends Model
     {
         return $this->hasMany(RotinaExercicio::class);
     }
+
+    public function logsSessoes(): HasMany
+    {
+        return $this->hasMany(LogSessao::class);
+    }
 }

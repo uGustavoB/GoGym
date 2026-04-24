@@ -4,6 +4,7 @@ use App\Http\Controllers\AlunoController;
 use App\Http\Controllers\ExercicioController;
 use App\Http\Controllers\FichaTreinoController;
 use App\Http\Controllers\PersonalController;
+use App\Http\Controllers\RegistroTreinoController;
 use App\Http\Controllers\VerificacaoEmailController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AutenticacaoController;
@@ -44,6 +45,11 @@ Route::middleware('auth:sanctum')->group(function () {
         //  Rotas para Gestão de Treinos
         Route::apiResource('exercicio', ExercicioController::class);
         Route::apiResource('ficha-treino', FichaTreinoController::class)->except(['update']);
+
+        //  Rotas do App Aluno - Registo de Treinos
+        Route::prefix('registro-treino')->group(function () {
+            Route::get('/meu-treino', [RegistroTreinoController::class, 'meuTreinoAtual']);
+            Route::post('/registrar-sessao', [RegistroTreinoController::class, 'registrarSessao']);
+        });
     });
 });
-

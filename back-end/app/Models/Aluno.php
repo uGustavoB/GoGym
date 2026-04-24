@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\AlunoFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Aluno extends Model
 {
-    /** @use HasFactory<\Database\Factories\AlunoFactory> */
+    /** @use HasFactory<AlunoFactory> */
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
@@ -45,5 +46,10 @@ class Aluno extends Model
     public function fichasTreinos(): HasMany
     {
         return $this->hasMany(FichaTreino::class);
+    }
+
+    public function logsSessoes(): HasMany
+    {
+        return $this->hasMany(LogSessao::class);
     }
 }
