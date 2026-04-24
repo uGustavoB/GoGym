@@ -35,6 +35,7 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: "Convites", description: "Sistema de convites para vincular alunos a personais")]
 #[OA\Tag(name: "Exercícios", description: "CRUD de Exercícios do Personal Trainer (requer e-mail verificado)")]
 #[OA\Tag(name: "Treinos", description: "Gestão de Fichas de Treino, semanas e rotinas (requer e-mail verificado)")]
+#[OA\Tag(name: "App Aluno - Execução", description: "Visualização do treino atual e registo de sessões de treino pelo aluno (requer e-mail verificado)")]
 
 // --- Schemas reutilizáveis ---
 
@@ -253,7 +254,66 @@ use OpenApi\Attributes as OA;
         ),
     ]
 )]
+
+// --- Schemas do Módulo App Aluno (Execução) ---
+
+#[OA\Schema(
+    schema: "LogSerieResource",
+    properties: [
+        new OA\Property(property: "id", type: "integer", example: 1),
+        new OA\Property(property: "rotina_exercicio_id", type: "integer", example: 1),
+        new OA\Property(property: "numero_serie", type: "integer", example: 1),
+        new OA\Property(property: "repeticoes_realizadas", type: "integer", example: 12),
+        new OA\Property(property: "carga_realizada", type: "string", example: "20kg"),
+        new OA\Property(property: "exercicio", ref: "#/components/schemas/RotinaExercicioResource", nullable: true),
+    ]
+)]
+#[OA\Schema(
+    schema: "LogSessaoResource",
+    properties: [
+        new OA\Property(property: "id", type: "integer", example: 1),
+        new OA\Property(property: "aluno_id", type: "integer", example: 1),
+        new OA\Property(
+            property: "rotina_sessao",
+            properties: [
+                new OA\Property(property: "id", type: "integer", example: 1),
+                new OA\Property(property: "letra_nome", type: "string", example: "A"),
+            ],
+            type: "object",
+            nullable: true
+        ),
+        new OA\Property(property: "data_execucao", type: "string", format: "date", example: "2026-04-24"),
+        new OA\Property(property: "esforco_percebido", type: "integer", example: 7),
+        new OA\Property(property: "duracao_minutos", type: "integer", example: 55),
+        new OA\Property(property: "observacoes_aluno", type: "string", nullable: true, example: "Treino pesado hoje"),
+        new OA\Property(property: "series", type: "array", items: new OA\Items(ref: "#/components/schemas/LogSerieResource")),
+        new OA\Property(property: "registado_em", type: "string", format: "date-time", example: "2026-04-24 15:00:00"),
+    ]
+)]
+#[OA\Schema(
+    schema: "RegistrarSessaoBody",
+    required: ["rotina_sessao_id", "data_execucao", "esforco_percebido", "duracao_minutos", "series"],
+    properties: [
+        new OA\Property(property: "rotina_sessao_id", type: "integer", example: 1, description: "ID da rotina (A, B, C...) que o aluno realizou"),
+        new OA\Property(property: "data_execucao", type: "string", format: "date", example: "2026-04-24"),
+        new OA\Property(property: "esforco_percebido", type: "integer", example: 7, description: "Percepção Subjetiva de Esforço (PSE), de 1 a 10"),
+        new OA\Property(property: "duracao_minutos", type: "integer", example: 55, description: "Duração total da sessão em minutos"),
+        new OA\Property(property: "observacoes_aluno", type: "string", nullable: true, example: "Treino pesado hoje"),
+        new OA\Property(
+            property: "series",
+            type: "array",
+            items: new OA\Items(
+                required: ["rotina_exercicio_id", "numero_serie", "repeticoes_realizadas", "carga_realizada"],
+                properties: [
+                    new OA\Property(property: "rotina_exercicio_id", type: "integer", example: 1, description: "ID do exercício da rotina (prescrição original)"),
+                    new OA\Property(property: "numero_serie", type: "integer", example: 1),
+                    new OA\Property(property: "repeticoes_realizadas", type: "integer", example: 12),
+                    new OA\Property(property: "carga_realizada", type: "string", example: "20kg cada lado"),
+                ]
+            )
+        ),
+    ]
+)]
 class SwaggerInfo
 {
 }
-

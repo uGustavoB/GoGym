@@ -2217,6 +2217,167 @@
                 ]
             }
         },
+        "/registro-treino/meu-treino": {
+            "get": {
+                "tags": [
+                    "App Aluno - Execução"
+                ],
+                "summary": "Obter meu treino atual",
+                "description": "Retorna a ficha de treino ativa do aluno autenticado (onde a data atual está entre data_inicio e data_vencimento). Caso não exista uma ficha no intervalo válido, retorna a mais recente. Inclui semanas de periodização, rotinas e exercícios detalhados via Eager Loading. Requer autenticação via Sanctum (token de aluno) e e-mail verificado.",
+                "operationId": "meuTreinoAtual",
+                "responses": {
+                    "200": {
+                        "description": "Ficha de treino ativa retornada com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/FichaTreinoResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Nenhuma ficha de treino encontrada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "Nenhuma ficha de treino encontrada."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutenticado"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "E-mail não verificado ou não é aluno",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutorizado"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/registro-treino/registrar-sessao": {
+            "post": {
+                "tags": [
+                    "App Aluno - Execução"
+                ],
+                "summary": "Registar sessão de treino concluída",
+                "description": "Regista a conclusão de uma sessão de treino pelo aluno autenticado. O payload inclui a rotina realizada (A, B, C...), a data de execução, o esforço percebido (PSE 1-10), a duração em minutos e um array de séries com repetições e cargas realizadas. A criação é atômica (transacional). A rotina informada deve pertencer a uma ficha de treino do aluno autenticado (validação de segurança). Requer autenticação via Sanctum (token de aluno) e e-mail verificado.",
+                "operationId": "registrarSessao",
+                "requestBody": {
+                    "description": "Payload com dados da sessão e séries realizadas",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RegistrarSessaoBody"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Sessão de treino registada com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "Sessão de treino registada com sucesso."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/LogSessaoResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutenticado"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Não autorizado (não é aluno ou rotina não pertence ao aluno)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutorizado"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erro de validação",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroValidacao"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno ao registar",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "Erro interno ao registar a sessão de treino. Tente novamente."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/email/verificar/{id}/{hash}": {
             "get": {
                 "tags": [
@@ -3012,6 +3173,163 @@
                     }
                 },
                 "type": "object"
+            },
+            "LogSerieResource": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "rotina_exercicio_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "numero_serie": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "repeticoes_realizadas": {
+                        "type": "integer",
+                        "example": 12
+                    },
+                    "carga_realizada": {
+                        "type": "string",
+                        "example": "20kg"
+                    },
+                    "exercicio": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/RotinaExercicioResource"
+                            }
+                        ],
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "LogSessaoResource": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "aluno_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "rotina_sessao": {
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 1
+                            },
+                            "letra_nome": {
+                                "type": "string",
+                                "example": "A"
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "data_execucao": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-04-24"
+                    },
+                    "esforco_percebido": {
+                        "type": "integer",
+                        "example": 7
+                    },
+                    "duracao_minutos": {
+                        "type": "integer",
+                        "example": 55
+                    },
+                    "observacoes_aluno": {
+                        "type": "string",
+                        "example": "Treino pesado hoje",
+                        "nullable": true
+                    },
+                    "series": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/LogSerieResource"
+                        }
+                    },
+                    "registado_em": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-04-24 15:00:00"
+                    }
+                },
+                "type": "object"
+            },
+            "RegistrarSessaoBody": {
+                "required": [
+                    "rotina_sessao_id",
+                    "data_execucao",
+                    "esforco_percebido",
+                    "duracao_minutos",
+                    "series"
+                ],
+                "properties": {
+                    "rotina_sessao_id": {
+                        "description": "ID da rotina (A, B, C...) que o aluno realizou",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "data_execucao": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-04-24"
+                    },
+                    "esforco_percebido": {
+                        "description": "Percepção Subjetiva de Esforço (PSE), de 1 a 10",
+                        "type": "integer",
+                        "example": 7
+                    },
+                    "duracao_minutos": {
+                        "description": "Duração total da sessão em minutos",
+                        "type": "integer",
+                        "example": 55
+                    },
+                    "observacoes_aluno": {
+                        "type": "string",
+                        "example": "Treino pesado hoje",
+                        "nullable": true
+                    },
+                    "series": {
+                        "type": "array",
+                        "items": {
+                            "required": [
+                                "rotina_exercicio_id",
+                                "numero_serie",
+                                "repeticoes_realizadas",
+                                "carga_realizada"
+                            ],
+                            "properties": {
+                                "rotina_exercicio_id": {
+                                    "description": "ID do exercício da rotina (prescrição original)",
+                                    "type": "integer",
+                                    "example": 1
+                                },
+                                "numero_serie": {
+                                    "type": "integer",
+                                    "example": 1
+                                },
+                                "repeticoes_realizadas": {
+                                    "type": "integer",
+                                    "example": 12
+                                },
+                                "carga_realizada": {
+                                    "type": "string",
+                                    "example": "20kg cada lado"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "type": "object"
             }
         },
         "securitySchemes": {
@@ -3051,6 +3369,10 @@
         {
             "name": "Treinos",
             "description": "Gestão de Fichas de Treino, semanas e rotinas (requer e-mail verificado)"
+        },
+        {
+            "name": "App Aluno - Execução",
+            "description": "Visualização do treino atual e registo de sessões de treino pelo aluno (requer e-mail verificado)"
         }
     ]
 }
