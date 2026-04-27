@@ -9,6 +9,8 @@ import {
   Dumbbell,
   LogOut,
   ChevronUp,
+  ChevronRight,
+  ClipboardList,
 } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import {
@@ -21,8 +23,16 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
   SidebarHeader,
 } from "@/components/ui/sidebar"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,15 +42,41 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
-const personalMenuItems = [
+interface MenuItem {
+  title: string
+  href: string
+  icon: React.ComponentType<{ className?: string }>
+}
+
+interface CollapsibleMenuItem {
+  title: string
+  icon: React.ComponentType<{ className?: string }>
+  children: { title: string; href: string }[]
+}
+
+type SidebarItem = MenuItem | CollapsibleMenuItem
+
+function isCollapsible(item: SidebarItem): item is CollapsibleMenuItem {
+  return "children" in item
+}
+
+const personalMenuItems: SidebarItem[] = [
   { title: "Início", href: "/dashboard", icon: Home },
-  { title: "Meus Alunos", href: "/dashboard/alunos", icon: Users },
+  {
+    title: "Meus Alunos",
+    icon: Users,
+    children: [
+      { title: "Lista de Alunos", href: "/dashboard/alunos" },
+      { title: "Fichas de Treino", href: "/dashboard/treinos/criar" },
+    ],
+  },
 ]
 
-const alunoMenuItems = [
+const alunoMenuItems: SidebarItem[] = [
   { title: "Início", href: "/dashboard", icon: Home },
   { title: "Meu Perfil", href: "/dashboard/perfil", icon: User },
   { title: "Meu Personal", href: "/dashboard/meu-personal", icon: Dumbbell },
+  { title: "Meu Treino", href: "/dashboard/meu-treino", icon: ClipboardList },
 ]
 
 export function AppSidebar() {
@@ -86,6 +122,49 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => {
+                if (isCollapsible(item)) {
+                  const isAnyChildActive = item.children.some((child) =>
+                    pathname.startsWith(child.href)
+                  )
+                  return (
+                    <Collapsible
+                      key={item.title}
+                      asChild
+                      defaultOpen={isAnyChildActive}
+                      className="group/collapsible"
+                    >
+                      <SidebarMenuItem>
+                        <CollapsibleTrigger asChild>
+                          <SidebarMenuButton
+                            tooltip={item.title}
+                            isActive={isAnyChildActive}
+                          >
+                            <item.icon />
+                            <span>{item.title}</span>
+                            <ChevronRight className="ml-auto size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                          </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <SidebarMenuSub>
+                            {item.children.map((child) => {
+                              const isChildActive = pathname.startsWith(child.href)
+                              return (
+                                <SidebarMenuSubItem key={child.href}>
+                                  <SidebarMenuSubButton asChild isActive={isChildActive}>
+                                    <Link href={child.href}>
+                                      <span>{child.title}</span>
+                                    </Link>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                              )
+                            })}
+                          </SidebarMenuSub>
+                        </CollapsibleContent>
+                      </SidebarMenuItem>
+                    </Collapsible>
+                  )
+                }
+
                 const isActive =
                   item.href === "/dashboard"
                     ? pathname === "/dashboard"
