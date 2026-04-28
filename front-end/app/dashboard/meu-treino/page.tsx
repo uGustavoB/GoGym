@@ -96,18 +96,70 @@ export default function MeuTreinoPage() {
     return ficha.rotinas.find((r) => r.letra_nome === rotinaAtiva) || null
   }, [ficha, rotinaAtiva])
 
+  const exerciciosAgrupados = useMemo(() => {
+    if (!rotinaSelecionada) return []
+    const grupos: Record<string, typeof rotinaSelecionada.exercicios> = {
+      aquecimento: [],
+      preparacao: [],
+      trabalho: [],
+      mista: []
+    }
+    
+    rotinaSelecionada.exercicios.forEach(ex => {
+      const tipo = ex.tipo_serie || "trabalho"
+      if (!grupos[tipo]) grupos[tipo] = []
+      grupos[tipo].push(ex)
+    })
+    
+    return [
+      { titulo: "Aquecimento", id: "aquecimento", itens: grupos.aquecimento },
+      { titulo: "Preparação", id: "preparacao", itens: grupos.preparacao },
+      { titulo: "Séries de Trabalho", id: "trabalho", itens: grupos.trabalho },
+      { titulo: "Mista / Outros", id: "mista", itens: grupos.mista }
+    ].filter(g => g.itens && g.itens.length > 0)
+  }, [rotinaSelecionada])
+
+  // Semana Ativa baseada na data de início
+  const semanaAtiva = useMemo(() => {
+    if (!ficha || ficha.semanas.length === 0) return null
+    const hoje = new Date()
+    hoje.setHours(0, 0, 0, 0)
+    
+    // Fallback: se data_inicio for invalida, assume 0
+    const tsInicio = Date.parse(ficha.data_inicio + "T00:00:00")
+    if (isNaN(tsInicio)) return ficha.semanas[0]
+    
+    const inicio = new Date(tsInicio)
+    const diffTime = hoje.getTime() - inicio.getTime()
+    
+    if (diffTime < 0) return ficha.semanas[0] // Treino planejado para o futuro, pega a primeira semana.
+
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+    const weekIndex = Math.floor(diffDays / 7)
+    
+    // Sort just in case they are out of order
+    const semanasOrdenadas = [...ficha.semanas].sort((a,b) => a.numero_semana - b.numero_semana)
+    
+    // Return appropriate week or the last week if exceeded
+    return semanasOrdenadas[weekIndex] || semanasOrdenadas[semanasOrdenadas.length - 1]
+  }, [ficha])
+
   // Inicializa inputs quando rotina muda
   useEffect(() => {
     if (!rotinaSelecionada) return
     const inputs: Record<string, SerieInput> = {}
     rotinaSelecionada.exercicios.forEach((ex) => {
+      const repeticoesAlvo = ex.repeticoes || semanaAtiva?.repeticoes_alvo || ""
+      const matchReps = repeticoesAlvo.match(/\d+/)
+      const repeticoesDefault = matchReps ? matchReps[0] : ""
+
       for (let s = 1; s <= ex.series; s++) {
         const key = `${ex.id}-${s}`
         if (!seriesInputs[key]) {
           inputs[key] = {
             rotina_exercicio_id: ex.id,
             numero_serie: s,
-            repeticoes_realizadas: ex.repeticoes || "",
+            repeticoes_realizadas: repeticoesDefault,
             carga_realizada: ex.carga_sugerida || "",
           }
         } else {
@@ -117,7 +169,7 @@ export default function MeuTreinoPage() {
     })
     setSeriesInputs((prev) => ({ ...prev, ...inputs }))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rotinaSelecionada])
+  }, [rotinaSelecionada, semanaAtiva])
 
   const updateSerieInput = (
     key: string,
@@ -274,10 +326,21 @@ export default function MeuTreinoPage() {
       <motion.div initial="hidden" animate="visible" custom={0} variants={fadeUp}>
         <div className="space-y-1">
           <h1 className="text-2xl font-bold tracking-tight">Meu Treino</h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground flex flex-wrap gap-1.5 items-center">
             <span className="font-medium text-foreground">{ficha.nome}</span>
             {ficha.objetivo && (
-              <span> — {ficha.objetivo}</span>
+              <>
+                <span className="text-muted-foreground/60">•</span>
+                <span>{ficha.objetivo}</span>
+              </>
+            )}
+            {semanaAtiva && (
+              <>
+                <span className="text-muted-foreground/60">•</span>
+                <Badge variant="secondary" className="px-1.5 font-normal">
+                  Semana {semanaAtiva.numero_semana} ({semanaAtiva.descricao_fase})
+                </Badge>
+              </>
             )}
           </p>
         </div>
@@ -302,114 +365,127 @@ export default function MeuTreinoPage() {
 
       {/* Exercícios da Rotina */}
       {rotinaSelecionada && (
-        <div className="grid gap-4 md:grid-cols-2">
-          {rotinaSelecionada.exercicios.map((ex, exIdx) => (
+        <div className="space-y-8">
+          {exerciciosAgrupados.map((grupo, gIdx) => (
             <motion.div
-              key={ex.id}
+              key={grupo.id}
               initial="hidden"
               animate="visible"
-              custom={exIdx + 2}
+              custom={gIdx + 2}
               variants={fadeUp}
+              className="space-y-4"
             >
-              <Card className="relative overflow-hidden">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="space-y-1">
-                      <CardTitle className="text-base">
-                        {ex.exercicio?.nome || `Exercício #${ex.ordem}`}
-                      </CardTitle>
-                      <CardDescription className="flex flex-wrap items-center gap-1.5">
-                        {ex.exercicio?.grupo_muscular && (
-                          <Badge
-                            variant="secondary"
-                            className="text-xs capitalize"
-                          >
-                            {ex.exercicio.grupo_muscular.replace("_", " ")}
-                          </Badge>
-                        )}
-                        <Badge variant="outline" className="text-xs">
-                          {ex.series} x {ex.repeticoes || "?"}
-                        </Badge>
-                        {ex.rir !== null && ex.rir !== undefined && (
-                          <Badge variant="outline" className="text-xs">
-                            RIR {ex.rir}
-                          </Badge>
-                        )}
-                      </CardDescription>
-                    </div>
-                    <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary text-sm font-bold">
-                      {ex.ordem}
-                    </div>
-                  </div>
-                  {ex.carga_sugerida && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Carga sugerida: <strong>{ex.carga_sugerida}</strong>
-                    </p>
-                  )}
-                  {ex.observacoes && (
-                    <p className="text-xs text-muted-foreground italic">
-                      {ex.observacoes}
-                    </p>
-                  )}
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {Array.from({ length: ex.series }).map((_, sIdx) => {
-                      const key = `${ex.id}-${sIdx + 1}`
-                      const serie = seriesInputs[key]
-                      if (!serie) return null
-                      return (
-                        <div
-                          key={key}
-                          className="flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2"
-                        >
-                          <span className="w-16 shrink-0 text-xs font-medium text-muted-foreground">
-                            Série {sIdx + 1}
-                          </span>
-                          <div className="flex flex-1 items-center gap-2">
-                            <div className="flex-1 space-y-0.5">
-                              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                                Reps
-                              </Label>
-                              <Input
-                                type="number"
-                                min={0}
-                                className="h-8 text-center"
-                                value={serie.repeticoes_realizadas}
-                                onChange={(e) =>
-                                  updateSerieInput(
-                                    key,
-                                    "repeticoes_realizadas",
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            </div>
-                            <div className="flex-1 space-y-0.5">
-                              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                                Carga
-                              </Label>
-                              <Input
-                                className="h-8 text-center"
-                                placeholder="Ex: 20kg"
-                                value={serie.carga_realizada}
-                                onChange={(e) =>
-                                  updateSerieInput(
-                                    key,
-                                    "carga_realizada",
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            </div>
-                          </div>
+              <h3 className="text-lg font-semibold tracking-tight border-b pb-2">
+                {grupo.titulo}
+              </h3>
+              <div className="grid gap-4 md:grid-cols-2">
+                {grupo.itens.map((ex, exIdx) => (
+                  <Card key={ex.id} className="relative overflow-hidden">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="space-y-1">
+                          <CardTitle className="text-base">
+                            {ex.exercicio?.nome || `Exercício #${ex.ordem}`}
+                          </CardTitle>
+                          <CardDescription className="flex flex-wrap items-center gap-1.5">
+                            {ex.exercicio?.grupo_muscular && (
+                              <Badge
+                                variant="secondary"
+                                className="text-xs capitalize"
+                              >
+                                {ex.exercicio.grupo_muscular.replace("_", " ")}
+                              </Badge>
+                            )}
+                            <Badge variant="outline" className="text-xs">
+                              {ex.series} x {ex.repeticoes || semanaAtiva?.repeticoes_alvo || "?"}
+                            </Badge>
+                            {(ex.rir ?? semanaAtiva?.rir_alvo) !== null && (
+                              <Badge variant="outline" className="text-xs">
+                                RIR {ex.rir ?? semanaAtiva?.rir_alvo}
+                              </Badge>
+                            )}
+                            {ex.tipo_serie && (
+                              <Badge variant="outline" className="text-xs uppercase">
+                                {ex.tipo_serie}
+                              </Badge>
+                            )}
+                          </CardDescription>
                         </div>
-                      )
-                    })}
-                  </div>
-                </CardContent>
-                <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-primary/40 to-primary/10" />
-              </Card>
+                        <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary text-sm font-bold">
+                          {ex.ordem}
+                        </div>
+                      </div>
+                      {ex.carga_sugerida && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Carga sugerida: <strong>{ex.carga_sugerida}</strong>
+                        </p>
+                      )}
+                      {ex.observacoes && (
+                        <p className="text-xs text-muted-foreground italic">
+                          {ex.observacoes}
+                        </p>
+                      )}
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {Array.from({ length: ex.series }).map((_, sIdx) => {
+                          const key = `${ex.id}-${sIdx + 1}`
+                          const serie = seriesInputs[key]
+                          if (!serie) return null
+                          return (
+                            <div
+                              key={key}
+                              className="flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2"
+                            >
+                              <span className="w-16 shrink-0 text-xs font-medium text-muted-foreground">
+                                Série {sIdx + 1}
+                              </span>
+                              <div className="flex flex-1 items-center gap-2">
+                                <div className="flex-1 space-y-0.5">
+                                  <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                                    Reps
+                                  </Label>
+                                  <Input
+                                    type="number"
+                                    min={0}
+                                    className="h-8 text-center"
+                                    value={serie.repeticoes_realizadas}
+                                    onChange={(e) =>
+                                      updateSerieInput(
+                                        key,
+                                        "repeticoes_realizadas",
+                                        e.target.value
+                                      )
+                                    }
+                                  />
+                                </div>
+                                <div className="flex-1 space-y-0.5">
+                                  <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                                    Carga
+                                  </Label>
+                                  <Input
+                                    className="h-8 text-center"
+                                    placeholder="Ex: 20kg"
+                                    value={serie.carga_realizada}
+                                    onChange={(e) =>
+                                      updateSerieInput(
+                                        key,
+                                        "carga_realizada",
+                                        e.target.value
+                                      )
+                                    }
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </CardContent>
+                    <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-primary/40 to-primary/10" />
+                  </Card>
+                ))}
+              </div>
             </motion.div>
           ))}
         </div>

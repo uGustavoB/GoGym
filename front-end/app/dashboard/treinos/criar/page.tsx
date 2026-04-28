@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useForm, useFieldArray } from "react-hook-form"
+import { useForm, useFieldArray, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { motion } from "framer-motion"
@@ -15,6 +15,8 @@ import {
   Check,
   ChevronsUpDown,
   Copy,
+  Calendar as CalendarIcon,
+  Info,
 } from "lucide-react"
 import {
   Card,
@@ -47,6 +49,14 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card"
+import { Calendar } from "@/components/ui/calendar"
+import { format } from "date-fns"
+import { ptBR } from "date-fns/locale"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
@@ -155,20 +165,7 @@ export default function CriarFichaPage() {
       rotinas: [
         {
           letra_nome: "A",
-          exercicios: [
-            {
-              exercicio_id: 0,
-              ordem: 1,
-              tipo_serie: "trabalho",
-              series: 3,
-              repeticoes: "",
-              rir: undefined,
-              carga_sugerida: "",
-              tecnica_avancada: "nenhuma",
-              descanso_segundos: undefined,
-              observacoes: "",
-            },
-          ],
+          exercicios: [],
         },
       ],
     },
@@ -426,9 +423,40 @@ export default function CriarFichaPage() {
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     {/* Data Início */}
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 flex flex-col">
                       <Label>Data de Início *</Label>
-                      <Input type="date" {...register("data_inicio")} />
+                      <Controller
+                        control={control}
+                        name="data_inicio"
+                        render={({ field }) => (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "w-full justify-start text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {field.value ? (
+                                  format(new Date(field.value + "T00:00:00"), "PPP", { locale: ptBR })
+                                ) : (
+                                  <span>Selecione a data</span>
+                                )}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value ? new Date(field.value + "T00:00:00") : undefined}
+                                onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        )}
+                      />
                       {errors.data_inicio && (
                         <p className="text-xs text-destructive">
                           {errors.data_inicio.message}
@@ -437,9 +465,40 @@ export default function CriarFichaPage() {
                     </div>
 
                     {/* Data Vencimento */}
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 flex flex-col">
                       <Label>Data de Vencimento</Label>
-                      <Input type="date" {...register("data_vencimento")} />
+                      <Controller
+                        control={control}
+                        name="data_vencimento"
+                        render={({ field }) => (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "w-full justify-start text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {field.value ? (
+                                  format(new Date(field.value + "T00:00:00"), "PPP", { locale: ptBR })
+                                ) : (
+                                  <span>Selecione a data</span>
+                                )}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value ? new Date(field.value + "T00:00:00") : undefined}
+                                onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        )}
+                      />
                     </div>
                   </div>
                 </CardContent>
@@ -530,7 +589,26 @@ export default function CriarFichaPage() {
                           </div>
 
                           <div className="space-y-1.5">
-                            <Label>RIR Alvo</Label>
+                            <div className="flex items-center gap-1.5">
+                              <Label>RIR Alvo</Label>
+                              <HoverCard>
+                                <HoverCardTrigger asChild>
+                                  <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
+                                </HoverCardTrigger>
+                                <HoverCardContent className="w-80">
+                                  <div className="space-y-1">
+                                    <h4 className="text-sm font-semibold">RIR (Repetições na Reserva)</h4>
+                                    <p className="text-sm text-muted-foreground">
+                                      Quantas repetições o aluno deve sentir que ainda conseguiria fazer (sobrando) ao final da série. 
+                                      <br/><br/>
+                                      0 = Falha total<br/>
+                                      1-2 = Muito pesado<br/>
+                                      3-4 = Moderado
+                                    </p>
+                                  </div>
+                                </HoverCardContent>
+                              </HoverCard>
+                            </div>
                             <Input
                               type="number"
                               min={0}
@@ -543,7 +621,22 @@ export default function CriarFichaPage() {
                           </div>
 
                           <div className="space-y-1.5">
-                            <Label>Intensidade da Carga</Label>
+                            <div className="flex items-center gap-1.5">
+                              <Label>Intensidade da Carga</Label>
+                              <HoverCard>
+                                <HoverCardTrigger asChild>
+                                  <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
+                                </HoverCardTrigger>
+                                <HoverCardContent className="w-80">
+                                  <div className="space-y-1">
+                                    <h4 className="text-sm font-semibold">Intensidade (%)</h4>
+                                    <p className="text-sm text-muted-foreground">
+                                      Referência do peso baseada na força máxima do aluno. Se o foco é hipertrofia/força, costuma ficar entre 70 e 85%.
+                                    </p>
+                                  </div>
+                                </HoverCardContent>
+                              </HoverCard>
+                            </div>
                             <Input
                               placeholder="Ex: Leve a Moderada"
                               {...register(
@@ -638,8 +731,6 @@ export default function CriarFichaPage() {
                           control={control}
                           register={register}
                           exercicios={exercicios}
-                          setValue={(name, value) => setValue(name, value)}
-                          getValues={(name) => getValues(name)}
                         />
                         {errors.rotinas?.[rIndex]?.exercicios &&
                           !Array.isArray(errors.rotinas[rIndex].exercicios) && (
@@ -667,20 +758,7 @@ export default function CriarFichaPage() {
                         String.fromCharCode(65 + rotinaFields.length)
                       appendRotina({
                         letra_nome: nextLetter,
-                        exercicios: [
-                          {
-                            exercicio_id: 0,
-                            ordem: 1,
-                            tipo_serie: "trabalho",
-                            series: 3,
-                            repeticoes: "",
-                            rir: undefined,
-                            carga_sugerida: "",
-                            tecnica_avancada: "nenhuma",
-                            descanso_segundos: undefined,
-                            observacoes: "",
-                          },
-                        ],
+                        exercicios: [],
                       })
                     }}
                   >

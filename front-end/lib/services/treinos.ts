@@ -159,3 +159,17 @@ export function registrarExecucaoSessao(data: RegistrarSessaoPayload) {
     body: JSON.stringify(data),
   })
 }
+
+export function listarFichasTreino(page: number = 1) {
+  return api<PaginatedResponse<FichaTreino>>(`/ficha-treino?page=${page}`)
+}
+
+export function buscarFichaTreino(id: number) {
+  return api<{ data: FichaTreino }>(`/ficha-treino/${id}`)
+}
+
+export function deletarFichaTreino(id: number) {
+  return api<{ mensagem: string }>(`/ficha-treino/${id}`, {
+    method: "DELETE",
+  })
+}

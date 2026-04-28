@@ -63,11 +63,11 @@ function isCollapsible(item: SidebarItem): item is CollapsibleMenuItem {
 const personalMenuItems: SidebarItem[] = [
   { title: "Início", href: "/dashboard", icon: Home },
   {
-    title: "Meus Alunos",
+    title: "Gerenciamento",
     icon: Users,
     children: [
       { title: "Lista de Alunos", href: "/dashboard/alunos" },
-      { title: "Fichas de Treino", href: "/dashboard/treinos/criar" },
+      { title: "Fichas de Treino", href: "/dashboard/treinos" },
     ],
   },
 ]
