@@ -2,11 +2,14 @@
 
 import { useState } from "react"
 import { useFieldArray, Controller, type Control, type UseFormRegister, useWatch } from "react-hook-form"
-import { Plus, Trash2, Dumbbell, Settings2, Loader2 } from "lucide-react"
+import { Plus, Trash2, Dumbbell, Settings2, Loader2, Info } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Separator } from "@/components/ui/separator"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Select,
   SelectContent,
@@ -44,6 +47,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { Badge } from "@/components/ui/badge"
 import { Check, ChevronsUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -191,14 +200,17 @@ export function ExercicioRotinaFields({
     <div className="space-y-4">
       {/* Table Viewer */}
       {fields.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-8 text-center rounded-lg border border-dashed bg-muted/20">
-          <Dumbbell className="h-10 w-10 text-muted-foreground mb-3 opacity-50" />
-          <h3 className="font-semibold text-foreground">Nenhum exercício na rotina</h3>
+        <div className="flex flex-col items-center justify-center p-10 text-center rounded-lg border border-dashed bg-muted/20">
+          <div className="flex size-12 items-center justify-center rounded-full bg-muted mb-4">
+            <Dumbbell className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <h3 className="font-semibold text-foreground">Nenhum exercício adicionado</h3>
           <p className="text-sm text-muted-foreground mb-4 max-w-sm">
-            Adicione exercícios a esta sessão de treino. A ordem definirá o fluxo de execução para o aluno.
+            Comece adicionando exercícios a esta sessão. A ordem definirá o fluxo de execução para o aluno.
           </p>
         </div>
       ) : (
+        <ScrollArea className={cn(fields.length > 5 && "h-[400px]")}>
         <div className="rounded-md border">
           <Table>
             <TableHeader>
@@ -260,6 +272,7 @@ export function ExercicioRotinaFields({
             </TableBody>
           </Table>
         </div>
+        </ScrollArea>
       )}
 
       {/* Controller Buttons */}
@@ -347,7 +360,19 @@ export function ExercicioRotinaFields({
 
             {/* Cargas e Descanso */}
             <div className="space-y-1.5">
-              <Label>RIR (Rate of Perceived Exertion)</Label>
+              <div className="flex items-center gap-1.5">
+                <Label>Repetições em Reserva (RIR)</Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger type="button">
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-xs">
+                      <p>Quantas reps o aluno sente que ainda faria. 0 = falha, 1-2 = pesado, 3-4 = moderado.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
               <Input 
                 type="number" min={0} max={10} placeholder="Ex: 2"
                 value={tempData.rir || ""} 
@@ -364,19 +389,22 @@ export function ExercicioRotinaFields({
               />
             </div>
 
+            <Separator className="sm:col-span-2" />
+
             <div className="space-y-1.5 sm:col-span-2">
-              <Label>Carga Sugerida (Opcional)</Label>
+              <Label>Carga Sugerida <span className="text-muted-foreground font-normal">(opcional)</span></Label>
               <Input 
-                placeholder="Ex: Pegar peso moderado"
+                placeholder="Ex: 20kg, peso moderado, usar halter"
                 value={tempData.carga_sugerida} 
                 onChange={e => setTempData({...tempData, carga_sugerida: e.target.value})} 
               />
             </div>
 
             <div className="space-y-1.5 sm:col-span-2">
-              <Label>Observações adicionais de ensino</Label>
-              <Input 
-                placeholder="Ex: Concentrar excêntrica, manter coluna reta"
+              <Label>Observações de execução</Label>
+              <Textarea 
+                placeholder="Ex: Concentrar excêntrica, manter coluna reta, pegar menos carga..."
+                className="min-h-16 resize-none"
                 value={tempData.observacoes} 
                 onChange={e => setTempData({...tempData, observacoes: e.target.value})} 
               />

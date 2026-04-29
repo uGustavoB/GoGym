@@ -1,10 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useForm, useFieldArray, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { motion } from "framer-motion"
+import { useRouter } from "next/navigation"
+import { motion, AnimatePresence } from "framer-motion"
 import {
   Loader2,
   Plus,
@@ -17,6 +18,11 @@ import {
   Copy,
   Calendar as CalendarIcon,
   Info,
+  ArrowLeft,
+  ChevronRight,
+  ChevronLeft,
+  CheckCircle2,
+  X,
 } from "lucide-react"
 import {
   Card,
@@ -25,10 +31,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Separator } from "@/components/ui/separator"
+import { Progress } from "@/components/ui/progress"
 import {
   Select,
   SelectContent,
@@ -50,10 +58,22 @@ import {
   CommandList,
 } from "@/components/ui/command"
 import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card"
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { Calendar } from "@/components/ui/calendar"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
@@ -83,6 +103,14 @@ const fadeUp: Variants = {
     transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] },
   },
 }
+
+const STEPS = [
+  { id: "dados-gerais", label: "Dados Gerais", icon: ClipboardList, description: "Aluno, nome e período" },
+  { id: "periodizacao", label: "Periodização", icon: CalendarDays, description: "Fases e intensidades" },
+  { id: "sessoes", label: "Sessões", icon: Layers, description: "Rotinas e exercícios" },
+] as const
+
+type StepId = (typeof STEPS)[number]["id"]
 
 // ── Zod Schema ──
 
@@ -127,13 +155,33 @@ export type FichaFormValues = z.infer<typeof fichaSchema>
 
 export default function CriarFichaPage() {
   const { tipoPerfil } = useAuth()
+  const router = useRouter()
   const [alunos, setAlunos] = useState<AlunoResource[]>([])
   const [exercicios, setExercicios] = useState<Exercicio[]>([])
   const [loadingData, setLoadingData] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [currentStep, setCurrentStep] = useState<StepId>("dados-gerais")
   
   // Controle do Popover do Aluno
   const [openAluno, setOpenAluno] = useState(false)
+
+  const currentStepIndex = STEPS.findIndex((s) => s.id === currentStep)
+  const progressPercent = ((currentStepIndex + 1) / STEPS.length) * 100
+
+  const goToStep = useCallback((step: StepId) => {
+    setCurrentStep(step)
+  }, [])
+
+  const goNext = useCallback(() => {
+    const nextIndex = currentStepIndex + 1
+    if (nextIndex < STEPS.length) setCurrentStep(STEPS[nextIndex].id)
+  }, [currentStepIndex])
+
+  const goPrev = useCallback(() => {
+    const prevIndex = currentStepIndex - 1
+    if (prevIndex >= 0) setCurrentStep(STEPS[prevIndex].id)
+  }, [currentStepIndex])
 
   const {
     register,
@@ -246,8 +294,11 @@ export default function CriarFichaPage() {
       }
 
       await criarFicha(payload)
+      setSubmitSuccess(true)
       toast.success("Ficha de treino criada com sucesso!")
-      reset()
+      setTimeout(() => {
+        router.push("/dashboard/treinos")
+      }, 1500)
     } catch (err: unknown) {
       const message =
         err && typeof err === "object" && "message" in err
@@ -287,39 +338,99 @@ export default function CriarFichaPage() {
   const LETRAS = ["A", "B", "C", "D", "E", "F", "G", "H"]
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-4xl space-y-8">
       <motion.div initial="hidden" animate="visible" variants={fadeUp}>
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">
-            Criar Ficha de Treino
-          </h1>
-          <p className="text-muted-foreground">
-            Monte uma ficha completa com periodização, rotinas e exercícios.
+        {/* Header com botão voltar */}
+        <div className="flex items-center gap-4">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="icon" className="shrink-0">
+                <ArrowLeft className="size-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Descartar ficha?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Todas as informações preenchidas serão perdidas. Tem certeza que deseja sair?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Continuar editando</AlertDialogCancel>
+                <AlertDialogAction onClick={() => router.push("/dashboard/treinos")}>
+                  Descartar e sair
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          <div className="space-y-1">
+            <h1 className="text-2xl font-bold tracking-tight">
+              Criar Ficha de Treino
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Monte uma ficha completa com periodização, rotinas e exercícios.
+            </p>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Stepper Visual */}
+      <motion.div initial="hidden" animate="visible" variants={fadeUp}>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-2">
+            {STEPS.map((step, index) => {
+              const Icon = step.icon
+              const isActive = step.id === currentStep
+              const isCompleted = index < currentStepIndex
+              return (
+                <button
+                  key={step.id}
+                  type="button"
+                  onClick={() => goToStep(step.id)}
+                  className={cn(
+                    "flex flex-1 items-center gap-3 rounded-lg border p-3 text-left transition-all duration-200",
+                    isActive && "border-primary bg-primary/5 shadow-sm",
+                    isCompleted && "border-primary/30 bg-primary/5",
+                    !isActive && !isCompleted && "border-border hover:border-primary/30 hover:bg-muted/50"
+                  )}
+                >
+                  <div className={cn(
+                    "flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition-colors",
+                    isActive && "bg-primary text-primary-foreground",
+                    isCompleted && "bg-primary/20 text-primary",
+                    !isActive && !isCompleted && "bg-muted text-muted-foreground"
+                  )}>
+                    {isCompleted ? <Check className="size-4" /> : index + 1}
+                  </div>
+                  <div className="hidden sm:block">
+                    <p className={cn(
+                      "text-sm font-medium",
+                      isActive && "text-primary",
+                      !isActive && !isCompleted && "text-muted-foreground"
+                    )}>
+                      {step.label}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{step.description}</p>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+          <Progress value={progressPercent} className="h-1" />
+          <p className="text-xs text-muted-foreground text-right">
+            Etapa {currentStepIndex + 1} de {STEPS.length}
           </p>
         </div>
       </motion.div>
 
       <motion.div initial="hidden" animate="visible" variants={fadeUp}>
         <form onSubmit={handleSubmit(onSubmit)}>
-          <Tabs defaultValue="dados-gerais" className="w-full">
-            <TabsList className="w-full sm:w-auto">
-              <TabsTrigger value="dados-gerais" className="gap-1.5">
-                <ClipboardList className="size-3.5" />
-                Dados Gerais
-              </TabsTrigger>
-              <TabsTrigger value="periodizacao" className="gap-1.5">
-                <CalendarDays className="size-3.5" />
-                Periodização
-              </TabsTrigger>
-              <TabsTrigger value="sessoes" className="gap-1.5">
-                <Layers className="size-3.5" />
-                Sessões
-              </TabsTrigger>
-            </TabsList>
+          <AnimatePresence mode="wait">
 
-            {/* ── Tab: Dados Gerais ── */}
-            <TabsContent value="dados-gerais" className="mt-4">
-              <Card>
+            {/* ── Step: Dados Gerais ── */}
+            {currentStep === "dados-gerais" && (
+              <motion.div key="dados-gerais" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }}>
+              <Card className="shadow-sm">
                 <CardHeader>
                   <CardTitle className="text-base">
                     Informações da Ficha
@@ -396,7 +507,7 @@ export default function CriarFichaPage() {
                         {...register("nome")}
                       />
                       {errors.nome && (
-                        <p className="text-xs text-destructive">
+                        <p className="text-xs text-destructive mt-1">
                           {errors.nome.message}
                         </p>
                       )}
@@ -413,12 +524,15 @@ export default function CriarFichaPage() {
                   </div>
 
                   {/* Observações */}
+                  <Separator />
                   <div className="space-y-1.5">
                     <Label>Observações Gerais</Label>
-                    <Input
-                      placeholder="Notas gerais sobre a ficha..."
+                    <Textarea
+                      placeholder="Notas gerais sobre a ficha, restrições ou cuidados especiais..."
+                      className="min-h-20 resize-none"
                       {...register("observacoes_gerais")}
                     />
+                    <p className="text-xs text-muted-foreground">Visível apenas para você como personal.</p>
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
@@ -503,11 +617,13 @@ export default function CriarFichaPage() {
                   </div>
                 </CardContent>
               </Card>
-            </TabsContent>
+              </motion.div>
+            )}
 
-            {/* ── Tab: Periodização (Semanas) ── */}
-            <TabsContent value="periodizacao" className="mt-4">
-              <Card>
+            {/* ── Step: Periodização (Semanas) ── */}
+            {currentStep === "periodizacao" && (
+              <motion.div key="periodizacao" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }}>
+              <Card className="shadow-sm">
                 <CardHeader>
                   <CardTitle className="text-base">
                     Semanas de Periodização
@@ -590,24 +706,17 @@ export default function CriarFichaPage() {
 
                           <div className="space-y-1.5">
                             <div className="flex items-center gap-1.5">
-                              <Label>RIR Alvo</Label>
-                              <HoverCard>
-                                <HoverCardTrigger asChild>
-                                  <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
-                                </HoverCardTrigger>
-                                <HoverCardContent className="w-80">
-                                  <div className="space-y-1">
-                                    <h4 className="text-sm font-semibold">RIR (Repetições na Reserva)</h4>
-                                    <p className="text-sm text-muted-foreground">
-                                      Quantas repetições o aluno deve sentir que ainda conseguiria fazer (sobrando) ao final da série. 
-                                      <br/><br/>
-                                      0 = Falha total<br/>
-                                      1-2 = Muito pesado<br/>
-                                      3-4 = Moderado
-                                    </p>
-                                  </div>
-                                </HoverCardContent>
-                              </HoverCard>
+                              <Label>Repetições em Reserva (RIR)</Label>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger type="button">
+                                    <Info className="h-4 w-4 text-muted-foreground" />
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="max-w-xs">
+                                    <p>Quantas reps o aluno sente que ainda faria ao final da série. 0 = falha total, 1-2 = pesado, 3-4 = moderado.</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             </div>
                             <Input
                               type="number"
@@ -623,19 +732,16 @@ export default function CriarFichaPage() {
                           <div className="space-y-1.5">
                             <div className="flex items-center gap-1.5">
                               <Label>Intensidade da Carga</Label>
-                              <HoverCard>
-                                <HoverCardTrigger asChild>
-                                  <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
-                                </HoverCardTrigger>
-                                <HoverCardContent className="w-80">
-                                  <div className="space-y-1">
-                                    <h4 className="text-sm font-semibold">Intensidade (%)</h4>
-                                    <p className="text-sm text-muted-foreground">
-                                      Referência do peso baseada na força máxima do aluno. Se o foco é hipertrofia/força, costuma ficar entre 70 e 85%.
-                                    </p>
-                                  </div>
-                                </HoverCardContent>
-                              </HoverCard>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger type="button">
+                                    <Info className="h-4 w-4 text-muted-foreground" />
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="max-w-xs">
+                                    <p>Referência baseada na força máxima. Hipertrofia/força costuma ficar entre 70-85%.</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             </div>
                             <Input
                               placeholder="Ex: Leve a Moderada"
@@ -674,11 +780,13 @@ export default function CriarFichaPage() {
                   </Button>
                 </CardContent>
               </Card>
-            </TabsContent>
+              </motion.div>
+            )}
 
-            {/* ── Tab: Sessões (Rotinas) ── */}
-            <TabsContent value="sessoes" className="mt-4">
-              <Card>
+            {/* ── Step: Sessões (Rotinas) ── */}
+            {currentStep === "sessoes" && (
+              <motion.div key="sessoes" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }}>
+              <Card className="shadow-sm">
                 <CardHeader>
                   <CardTitle className="text-base">
                     Sessões de Treino (Rotinas)
@@ -767,15 +875,52 @@ export default function CriarFichaPage() {
                   </Button>
                 </CardContent>
               </Card>
-            </TabsContent>
-          </Tabs>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          {/* Submit */}
-          <div className="mt-6 flex justify-end">
-            <Button type="submit" disabled={submitting} size="lg">
-              {submitting && <Loader2 className="mr-2 size-4 animate-spin" />}
-              Salvar Ficha de Treino
+          {/* Step Navigation + Submit */}
+          <div className="mt-8 flex items-center justify-between">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={goPrev}
+              disabled={currentStepIndex === 0}
+              className="gap-1.5"
+            >
+              <ChevronLeft className="size-4" />
+              Voltar
             </Button>
+
+            <div className="flex items-center gap-3">
+              {currentStepIndex < STEPS.length - 1 ? (
+                <Button type="button" onClick={goNext} className="gap-1.5">
+                  Próximo
+                  <ChevronRight className="size-4" />
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  disabled={submitting || submitSuccess}
+                  size="lg"
+                  className="gap-2 min-w-[200px]"
+                >
+                  {submitSuccess ? (
+                    <>
+                      <CheckCircle2 className="size-4" />
+                      Ficha salva com sucesso!
+                    </>
+                  ) : submitting ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" />
+                      Salvando...
+                    </>
+                  ) : (
+                    "Salvar Ficha de Treino"
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
         </form>
       </motion.div>

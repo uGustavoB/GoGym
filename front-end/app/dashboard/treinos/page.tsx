@@ -61,6 +61,7 @@ import {
   type FichaTreino,
 } from "@/lib/services/treinos"
 import { listarAlunosRequest, type AlunoResource } from "@/lib/api"
+import { FichaDetalheModal } from "@/components/treinos/ficha-detalhe-modal"
 
 export default function TreinosPage() {
   const { tipoPerfil } = useAuth()
@@ -278,68 +279,13 @@ export default function TreinosPage() {
       </Card>
 
       {/* Modal de Visualização Rápida */}
-      <Dialog open={!!fichaDetalheId} onOpenChange={(open) => !open && setFichaDetalheId(null)}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Detalhes da Ficha de Treino</DialogTitle>
-            <DialogDescription>
-              Resumo da periodização e rotinas construídas.
-            </DialogDescription>
-          </DialogHeader>
-          
-          {loadingDetalhe ? (
-            <div className="flex justify-center py-10">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : fichaDetalhe ? (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground">Nome</h4>
-                  <p className="font-medium">{fichaDetalhe.nome}</p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground">Aluno</h4>
-                  <p className="font-medium">{alunos[fichaDetalhe.aluno_id] || "ID: " + fichaDetalhe.aluno_id}</p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground">Início</h4>
-                  <p className="text-sm">
-                    {format(new Date(fichaDetalhe.data_inicio + 'T00:00:00'), "dd 'de' MMMM, yyyy", { locale: ptBR })}
-                  </p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground">Semanas (Fases)</h4>
-                  <p className="text-sm">{fichaDetalhe.semanas?.length || 0} criadas</p>
-                </div>
-              </div>
-
-              {fichaDetalhe.rotinas && fichaDetalhe.rotinas.length > 0 && (
-                <div className="space-y-3">
-                  <h4 className="text-sm font-medium text-muted-foreground border-b pb-2">Sessões (Rotinas)</h4>
-                  <div className="grid gap-2">
-                    {fichaDetalhe.rotinas.map(rot => (
-                      <div key={rot.id} className="rounded-md border p-3 flex justify-between items-center">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary font-bold">
-                            {rot.letra_nome}
-                          </div>
-                          <div>
-                            <p className="font-medium">Treino {rot.letra_nome}</p>
-                            <p className="text-xs text-muted-foreground">{rot.exercicios?.length || 0} exercícios cadastrados</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <p className="text-muted-foreground text-sm">Não foi possível carregar os dados.</p>
-          )}
-        </DialogContent>
-      </Dialog>
+      <FichaDetalheModal
+        open={!!fichaDetalheId}
+        onClose={() => setFichaDetalheId(null)}
+        ficha={fichaDetalhe}
+        loading={loadingDetalhe}
+        alunoNome={fichaDetalhe ? (alunos[fichaDetalhe.aluno_id] || `Aluno #${fichaDetalhe.aluno_id}`) : ""}
+      />
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
