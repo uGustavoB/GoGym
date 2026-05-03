@@ -8,6 +8,7 @@ use App\Http\Resources\ExercicioResource;
 use App\Models\Exercicio;
 use App\Services\ExercicioService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 
 class ExercicioController extends Controller
@@ -19,12 +20,16 @@ class ExercicioController extends Controller
     #[OA\Get(
         path: "/exercicio",
         operationId: "listarExercicios",
-        description: "Retorna uma lista paginada de exercícios visíveis pelo Personal Trainer autenticado (exercícios próprios + exercícios globais da plataforma). Requer autenticação e e-mail verificado.",
+        description: "Retorna uma lista paginada de exercícios visíveis pelo Personal Trainer autenticado (exercícios próprios + exercícios globais da plataforma). Suporta filtros combináveis por nome, tipo, grupo muscular e origem. Requer autenticação e e-mail verificado.",
         summary: "Listar exercícios",
         security: [["sanctum" => []]],
         tags: ["Exercícios"],
         parameters: [
             new OA\Parameter(name: "page", description: "Número da página", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 1)),
+            new OA\Parameter(name: "nome", description: "Busca parcial por nome do exercício (case-insensitive)", in: "query", required: false, schema: new OA\Schema(type: "string", example: "agachamento")),
+            new OA\Parameter(name: "tipo", description: "Filtro por tipo de exercício", in: "query", required: false, schema: new OA\Schema(type: "string", enum: ["superior", "inferior", "core", "cardio", "full_body"])),
+            new OA\Parameter(name: "grupo_muscular", description: "Filtro por grupo muscular", in: "query", required: false, schema: new OA\Schema(type: "string", enum: ["peitoral", "costas", "ombros", "biceps", "triceps", "quadriceps", "posterior_coxa", "gluteos", "panturrilhas", "abdomen", "outro"])),
+            new OA\Parameter(name: "is_global", description: "Filtro por origem: true = globais, false = do personal", in: "query", required: false, schema: new OA\Schema(type: "string", enum: ["true", "false"])),
         ],
         responses: [
             new OA\Response(
@@ -42,9 +47,11 @@ class ExercicioController extends Controller
             new OA\Response(response: 403, description: "E-mail não verificado", content: new OA\JsonContent(ref: "#/components/schemas/ErroNaoAutorizado")),
         ]
     )]
-    public function index(): JsonResponse
+    public function index(Request $requisicao): JsonResponse
     {
-        $exercicios = $this->servico->listar();
+        $filtros = $requisicao->only(['nome', 'tipo', 'grupo_muscular', 'is_global']);
+
+        $exercicios = $this->servico->listar($filtros);
 
         return response()->json(ExercicioResource::collection($exercicios)->response()->getData(true));
     }
