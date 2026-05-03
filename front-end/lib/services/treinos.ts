@@ -164,7 +164,7 @@ export function listarExercicios(filtros: ExercicioFiltros = {}) {
   if (filtros.nome) params.set("nome", filtros.nome)
   if (filtros.tipo) params.set("tipo", filtros.tipo)
   if (filtros.grupo_muscular) params.set("grupo_muscular", filtros.grupo_muscular)
-  if (filtros.is_global) params.set("is_global", filtros.is_global)
+  if (filtros.is_global !== undefined) params.set("is_global", String(filtros.is_global))
 
   return api<PaginatedResponse<Exercicio>>(`/exercicio?${params.toString()}`)
 }

@@ -64,7 +64,6 @@ interface ExercicioRotinaFieldsProps {
   rotinaIndex: number
   control: Control<FichaFormValues>
   register: UseFormRegister<FichaFormValues>
-  exercicios: Exercicio[]
 }
 
 const TIPOS_SERIE = [
@@ -83,73 +82,11 @@ const TECNICAS_AVANCADAS = [
   { value: "ponto_zero", label: "Ponto Zero" },
 ]
 
-function ExercicioCombobox({
-  exercicios,
-  value,
-  onChange,
-}: {
-  exercicios: Exercicio[]
-  value?: number
-  onChange: (val: number) => void
-}) {
-  const [open, setOpen] = useState(false)
-  const selectedEx = exercicios.find((ex) => ex.id === value)
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className={cn(
-            "w-full justify-between font-normal",
-            !value && "text-muted-foreground"
-          )}
-        >
-          {selectedEx
-            ? `${selectedEx.nome} — ${selectedEx.grupo_muscular}`
-            : "Selecione um exercício..."}
-          <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-full sm:w-[400px] p-0" align="start">
-        <Command>
-          <CommandInput placeholder="Buscar exercício (nome ou grupo)..." />
-          <CommandList>
-            <CommandEmpty>Nenhum exercício encontrado.</CommandEmpty>
-            <CommandGroup>
-              {exercicios.map((ex) => (
-                <CommandItem
-                  key={ex.id}
-                  value={`${ex.nome} ${ex.grupo_muscular}`}
-                  onSelect={() => {
-                    onChange(ex.id)
-                    setOpen(false)
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 size-4",
-                      value === ex.id ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  {ex.nome} — {ex.grupo_muscular}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
-  )
-}
+import { ExercicioPickerDialog } from "./exercicio-picker-dialog"
 
 export function ExercicioRotinaFields({
   rotinaIndex,
   control,
-  exercicios,
 }: ExercicioRotinaFieldsProps) {
   const { fields, append, remove } = useFieldArray({
     control,
@@ -161,9 +98,9 @@ export function ExercicioRotinaFields({
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   
-  // Estado isolado temporário para o modal
   const [tempData, setTempData] = useState({
     exercicio_id: 0,
+    exercicio_nome: "",
     ordem: fields.length + 1,
     tipo_serie: "trabalho",
     series: 3,
@@ -175,9 +112,12 @@ export function ExercicioRotinaFields({
     observacoes: "",
   })
 
+  const [isPickerOpen, setIsPickerOpen] = useState(false)
+
   const handleOpenModal = () => {
     setTempData({
       exercicio_id: 0,
+      exercicio_nome: "",
       ordem: fields.length + 1,
       tipo_serie: "trabalho",
       series: 3,
@@ -226,7 +166,6 @@ export function ExercicioRotinaFields({
             <TableBody>
               {fields.map((field, exIndex) => {
                 const currentVal = watchExercicios?.[exIndex] || field
-                const foundEx = exercicios.find(e => e.id === currentVal.exercicio_id)
                 return (
                   <TableRow key={field.id} className="hover:bg-muted/30">
                     <TableCell className="text-center font-medium">
@@ -234,7 +173,8 @@ export function ExercicioRotinaFields({
                     </TableCell>
                     <TableCell>
                       <div className="text-sm font-medium">
-                        {foundEx ? foundEx.nome : "—"}
+                        {/* @ts-ignore - exercicio_nome exists dynamically */}
+                        {currentVal.exercicio_nome || "—"}
                       </div>
                       <div className="mt-1 flex items-center gap-2">
                         <Badge variant="secondary" className="py-0 text-[10px]">
@@ -313,11 +253,18 @@ export function ExercicioRotinaFields({
             {/* Secção de Seleção */}
             <div className="sm:col-span-2 space-y-1.5 focus-within:z-50">
               <Label>Selecione o Exercício *</Label>
-              <ExercicioCombobox
-                exercicios={exercicios}
-                value={tempData.exercicio_id}
-                onChange={(val) => setTempData({...tempData, exercicio_id: val})}
-              />
+              <Button
+                type="button"
+                variant="outline"
+                className={cn(
+                  "w-full justify-start font-normal",
+                  !tempData.exercicio_id && "text-muted-foreground"
+                )}
+                onClick={() => setIsPickerOpen(true)}
+              >
+                <Dumbbell className="mr-2 h-4 w-4" />
+                {tempData.exercicio_nome || "Buscar exercício..."}
+              </Button>
             </div>
 
             {/* Config Básica */}
@@ -434,6 +381,18 @@ export function ExercicioRotinaFields({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ExercicioPickerDialog
+        open={isPickerOpen}
+        onOpenChange={setIsPickerOpen}
+        onSelect={(exercicio) => {
+          setTempData({
+            ...tempData,
+            exercicio_id: exercicio.id,
+            exercicio_nome: exercicio.nome,
+          })
+        }}
+      />
     </div>
   )
 }

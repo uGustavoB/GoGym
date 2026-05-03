@@ -254,7 +254,7 @@ export default function EditarFichaPage() {
       try {
         const [alunosRes, exerciciosRes, fichaRes] = await Promise.all([
           listarAlunosRequest(1, {}),
-          listarExercicios(1),
+          listarExercicios({ page: 1 }),
           buscarFichaTreino(id),
         ])
         
@@ -266,7 +266,7 @@ export default function EditarFichaPage() {
         const totalPages = exerciciosRes.meta.last_page
         while (currentPage < totalPages) {
           currentPage++
-          const nextPage = await listarExercicios(currentPage)
+          const nextPage = await listarExercicios({ page: currentPage })
           allExercicios = [...allExercicios, ...nextPage.data]
         }
         setExercicios(allExercicios)
@@ -1009,7 +1009,6 @@ export default function EditarFichaPage() {
                             register={
                               register as unknown as UseFormRegister<FichaFormValues>
                             }
-                            exercicios={exercicios}
                           />
                           {errors.rotinas?.[rIndex]?.exercicios &&
                             !Array.isArray(

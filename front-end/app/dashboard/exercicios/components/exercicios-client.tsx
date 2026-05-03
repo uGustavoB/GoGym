@@ -63,28 +63,8 @@ import { Label } from "@/components/ui/label"
 import { ExercicioFormDialog } from "./exercicio-form-dialog"
 import { ExercicioDeleteDialog } from "./exercicio-delete-dialog"
 import { ExercicioDialogDetails } from "./exercicio-dialog-details"
+import { GRUPO_MUSCULAR_MAP, TIPO_MAP } from "@/lib/constants/exercise-constants"
 
-const GRUPO_MUSCULAR_MAP: Record<string, string> = {
-  peitoral: "Peitoral",
-  costas: "Costas",
-  ombros: "Ombros",
-  biceps: "Bíceps",
-  triceps: "Tríceps",
-  quadriceps: "Quadríceps",
-  posterior_coxa: "Posterior de Coxa",
-  gluteos: "Glúteos",
-  panturrilhas: "Panturrilhas",
-  abdomen: "Abdômen",
-  outro: "Outro",
-}
-
-const TIPO_MAP: Record<string, string> = {
-  superior: "Membros Superiores",
-  inferior: "Membros Inferiores",
-  core: "Core",
-  cardio: "Cardio",
-  full_body: "Full Body",
-}
 
 export function ExerciciosClient() {
   const [exercicios, setExercicios] = useState<Exercicio[]>([])

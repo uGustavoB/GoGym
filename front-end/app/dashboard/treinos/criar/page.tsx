@@ -245,7 +245,7 @@ export default function CriarFichaPage() {
       try {
         const [alunosRes, exerciciosRes] = await Promise.all([
           listarAlunosRequest(1, {}),
-          listarExercicios(1),
+          listarExercicios({ page: 1 }),
         ])
         setAlunos(alunosRes.data)
 
@@ -255,7 +255,7 @@ export default function CriarFichaPage() {
         const totalPages = exerciciosRes.meta.last_page
         while (currentPage < totalPages) {
           currentPage++
-          const nextPage = await listarExercicios(currentPage)
+          const nextPage = await listarExercicios({ page: currentPage })
           allExercicios = [...allExercicios, ...nextPage.data]
         }
         setExercicios(allExercicios)
@@ -853,7 +853,6 @@ export default function CriarFichaPage() {
                           rotinaIndex={rIndex}
                           control={control}
                           register={register}
-                          exercicios={exercicios}
                         />
                         {errors.rotinas?.[rIndex]?.exercicios &&
                           !Array.isArray(errors.rotinas[rIndex].exercicios) && (
