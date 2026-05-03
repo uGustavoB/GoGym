@@ -31,7 +31,7 @@ class UsuarioFactory extends Factory
             'nome' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'data_verificacao_email' => now(),
-            'senha' => static::$password ??= Hash::make('1234'),
+            'senha' => static::$password ??= bcrypt('1234'),
             'remember_token' => Str::random(10),
         ];
     }
