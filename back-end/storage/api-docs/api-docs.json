@@ -1049,7 +1049,7 @@
                     "Exercícios"
                 ],
                 "summary": "Listar exercícios",
-                "description": "Retorna uma lista paginada de exercícios visíveis pelo Personal Trainer autenticado (exercícios próprios + exercícios globais da plataforma). Requer autenticação e e-mail verificado.",
+                "description": "Retorna uma lista paginada de exercícios visíveis pelo Personal Trainer autenticado (exercícios próprios + exercícios globais da plataforma). Suporta filtros combináveis por nome, tipo, grupo muscular e origem. Requer autenticação e e-mail verificado.",
                 "operationId": "listarExercicios",
                 "parameters": [
                     {
@@ -1060,6 +1060,67 @@
                         "schema": {
                             "type": "integer",
                             "default": 1
+                        }
+                    },
+                    {
+                        "name": "nome",
+                        "in": "query",
+                        "description": "Busca parcial por nome do exercício (case-insensitive)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "agachamento"
+                        }
+                    },
+                    {
+                        "name": "tipo",
+                        "in": "query",
+                        "description": "Filtro por tipo de exercício",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "superior",
+                                "inferior",
+                                "core",
+                                "cardio",
+                                "full_body"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "grupo_muscular",
+                        "in": "query",
+                        "description": "Filtro por grupo muscular",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "peitoral",
+                                "costas",
+                                "ombros",
+                                "biceps",
+                                "triceps",
+                                "quadriceps",
+                                "posterior_coxa",
+                                "gluteos",
+                                "panturrilhas",
+                                "abdomen",
+                                "outro"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "is_global",
+                        "in": "query",
+                        "description": "Filtro por origem: true = globais, false = do personal",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "true",
+                                "false"
+                            ]
                         }
                     }
                 ],
@@ -1738,6 +1799,119 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ErroNaoEncontrado"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Treinos"
+                ],
+                "summary": "Atualizar ficha de treino",
+                "description": "Atualiza uma ficha de treino completa de forma atômica. Utiliza upsert inteligente para rotinas e exercícios, preservando IDs referenciados pelo histórico do aluno (LogSessao/LogSerie). Semanas são recriadas por não possuírem referências externas.",
+                "operationId": "atualizarFichaTreino",
+                "parameters": [
+                    {
+                        "name": "ficha_treino",
+                        "in": "path",
+                        "description": "ID da ficha de treino",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Payload completo da ficha de treino com semanas, rotinas e exercícios (IDs existentes são atualizados, novos são criados)",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ArmazenarFichaTreinoBody"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Ficha de treino atualizada com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "Ficha de treino atualizada com sucesso."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/FichaTreinoResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutenticado"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Não autorizado (não é Personal)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutorizado"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Ficha de treino não encontrada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoEncontrado"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erro de validação",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroValidacao"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno ao atualizar",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "Erro interno ao atualizar a ficha de treino. Tente novamente."
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
