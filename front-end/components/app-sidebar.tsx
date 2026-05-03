@@ -67,6 +67,7 @@ const personalMenuItems: SidebarItem[] = [
     icon: Users,
     children: [
       { title: "Lista de Alunos", href: "/dashboard/alunos" },
+      { title: "Biblioteca de Exercícios", href: "/dashboard/exercicios" },
       { title: "Fichas de Treino", href: "/dashboard/treinos" },
     ],
   },

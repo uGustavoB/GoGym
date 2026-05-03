@@ -13,6 +13,16 @@ export interface Exercicio {
   cadastrado_em: string
 }
 
+export interface CriarExercicioPayload {
+  nome: string
+  tipo: "superior" | "inferior" | "core" | "cardio" | "full_body"
+  grupo_muscular: string
+  video_url?: string
+  instrucoes?: string
+}
+
+export interface AtualizarExercicioPayload extends Partial<CriarExercicioPayload> {}
+
 export interface RotinaExercicio {
   id: number
   exercicio_id: number
@@ -139,8 +149,44 @@ export interface LogSessao {
 
 // ── Funções de API ──
 
-export function listarExercicios(page: number = 1) {
-  return api<PaginatedResponse<Exercicio>>(`/exercicio?page=${page}`)
+export interface ExercicioFiltros {
+  page?: number
+  nome?: string
+  tipo?: string
+  grupo_muscular?: string
+  is_global?: string // "true" | "false"
+}
+
+export function listarExercicios(filtros: ExercicioFiltros = {}) {
+  const params = new URLSearchParams()
+  params.set("page", String(filtros.page ?? 1))
+
+  if (filtros.nome) params.set("nome", filtros.nome)
+  if (filtros.tipo) params.set("tipo", filtros.tipo)
+  if (filtros.grupo_muscular) params.set("grupo_muscular", filtros.grupo_muscular)
+  if (filtros.is_global) params.set("is_global", filtros.is_global)
+
+  return api<PaginatedResponse<Exercicio>>(`/exercicio?${params.toString()}`)
+}
+
+export function criarExercicio(data: CriarExercicioPayload) {
+  return api<{ mensagem: string; data: Exercicio }>("/exercicio", {
+    method: "POST",
+    body: JSON.stringify(data),
+  })
+}
+
+export function atualizarExercicio(id: number, data: AtualizarExercicioPayload) {
+  return api<{ mensagem: string; data: Exercicio }>(`/exercicio/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  })
+}
+
+export function deletarExercicio(id: number) {
+  return api<{ mensagem: string }>(`/exercicio/${id}`, {
+    method: "DELETE",
+  })
 }
 
 export function criarFicha(data: CriarFichaPayload) {
