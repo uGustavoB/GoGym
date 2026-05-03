@@ -42,11 +42,8 @@ class Exercicio extends Model
         return $this->hasMany(RotinaExercicio::class);
     }
 
-    // ── Escopos Locais ──
 
-    /**
-     * Busca por nome (case-insensitive, ignora acentos via collation do banco).
-     */
+    // Filtros por escopo
     public function scopeSearch(Builder $query, ?string $nome): Builder
     {
         return $query->when($nome, fn (Builder $q, string $valor) =>
@@ -54,9 +51,6 @@ class Exercicio extends Model
         );
     }
 
-    /**
-     * Filtra por tipo exato (superior, inferior, core, cardio, full_body).
-     */
     public function scopeTipo(Builder $query, ?string $tipo): Builder
     {
         return $query->when($tipo, fn (Builder $q, string $valor) =>
@@ -64,9 +58,6 @@ class Exercicio extends Model
         );
     }
 
-    /**
-     * Filtra por grupo muscular exato.
-     */
     public function scopeGrupoMuscular(Builder $query, ?string $grupoMuscular): Builder
     {
         return $query->when($grupoMuscular, fn (Builder $q, string $valor) =>
@@ -74,9 +65,6 @@ class Exercicio extends Model
         );
     }
 
-    /**
-     * Filtra exercícios globais (personal_id IS NULL) ou do personal (personal_id IS NOT NULL).
-     */
     public function scopeGlobal(Builder $query, ?string $isGlobal): Builder
     {
         return $query->when($isGlobal !== null && $isGlobal !== '', function (Builder $q) use ($isGlobal) {
