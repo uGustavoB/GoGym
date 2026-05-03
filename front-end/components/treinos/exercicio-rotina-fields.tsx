@@ -99,6 +99,7 @@ function ExercicioCombobox({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          type="button"
           variant="outline"
           role="combobox"
           aria-expanded={open}
@@ -232,25 +233,33 @@ export function ExercicioRotinaFields({
                       {exIndex + 1}
                     </TableCell>
                     <TableCell>
-                      <div className="font-medium text-sm">
+                      <div className="text-sm font-medium">
                         {foundEx ? foundEx.nome : "—"}
                       </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="secondary" className="text-[10px] py-0">{currentVal.tipo_serie}</Badge>
-                        {currentVal.tecnica_avancada !== "nenhuma" && (
-                          <Badge variant="outline" className="text-[10px] text-muted-foreground py-0 border-primary/20">
-                            {currentVal.tecnica_avancada}
-                          </Badge>
-                        )}
+                      <div className="mt-1 flex items-center gap-2">
+                        <Badge variant="secondary" className="py-0 text-[10px]">
+                          {currentVal.tipo_serie}
+                        </Badge>
+
+                        {/* Verifica se tem valor válido E se é diferente de "nenhuma" */}
+                        {currentVal.tecnica_avancada &&
+                          currentVal.tecnica_avancada !== "nenhuma" && (
+                            <Badge
+                              variant="outline"
+                              className="border-primary/20 py-0 text-[10px] text-muted-foreground"
+                            >
+                              {currentVal.tecnica_avancada}
+                            </Badge>
+                          )}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="text-sm border py-1 px-2 rounded-md bg-background">
+                      <span className="rounded-md border bg-background px-2 py-1 text-sm">
                         {currentVal.series} x {currentVal.repeticoes || "?"}
                       </span>
                     </TableCell>
                     <TableCell>
-                      <div className="text-xs space-y-0.5 text-muted-foreground">
+                      <div className="space-y-0.5 text-xs text-muted-foreground">
                         <div>RIR: {currentVal.rir ?? "—"}</div>
                         <div>Carga: {currentVal.carga_sugerida || "—"}</div>
                       </div>

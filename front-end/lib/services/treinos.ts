@@ -15,6 +15,7 @@ export interface Exercicio {
 
 export interface RotinaExercicio {
   id: number
+  exercicio_id: number
   ordem: number
   tipo_serie: "aquecimento" | "preparacao" | "trabalho" | "mista"
   series: number
@@ -171,5 +172,39 @@ export function buscarFichaTreino(id: number) {
 export function deletarFichaTreino(id: number) {
   return api<{ mensagem: string }>(`/ficha-treino/${id}`, {
     method: "DELETE",
+  })
+}
+
+// ── Payloads de atualização (estendem criação com IDs opcionais) ──
+
+export interface AtualizarExercicioRotinaPayload extends CriarExercicioRotinaPayload {
+  id?: number
+}
+
+export interface AtualizarRotinaPayload {
+  id?: number
+  letra_nome: string
+  exercicios: AtualizarExercicioRotinaPayload[]
+}
+
+export interface AtualizarSemanaPayload extends CriarSemanaPayload {
+  id?: number
+}
+
+export interface AtualizarFichaPayload {
+  aluno_id: number
+  nome: string
+  objetivo?: string
+  observacoes_gerais?: string
+  data_inicio: string
+  data_vencimento?: string
+  semanas: AtualizarSemanaPayload[]
+  rotinas: AtualizarRotinaPayload[]
+}
+
+export function atualizarFicha(id: number, data: AtualizarFichaPayload) {
+  return api<{ mensagem: string; data: FichaTreino }>(`/ficha-treino/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
   })
 }

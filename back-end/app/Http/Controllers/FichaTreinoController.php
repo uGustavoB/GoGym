@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Treinos\ArmazenarFichaTreinoRequest;
+use App\Http\Requests\Treinos\AtualizarFichaTreinoRequest;
 use App\Http\Resources\FichaTreinoResource;
 use App\Models\FichaTreino;
 use App\Services\FichaTreinoService;
@@ -125,6 +126,62 @@ class FichaTreinoController extends Controller
         } catch (\Throwable) {
             return response()->json([
                 'mensagem' => 'Erro interno ao salvar a ficha de treino. Tente novamente.',
+            ], 500);
+        }
+    }
+
+    #[OA\Put(
+        path: "/ficha-treino/{ficha_treino}",
+        operationId: "atualizarFichaTreino",
+        description: "Atualiza uma ficha de treino completa de forma atômica. Utiliza upsert inteligente para rotinas e exercícios, preservando IDs referenciados pelo histórico do aluno (LogSessao/LogSerie). Semanas são recriadas por não possuírem referências externas.",
+        summary: "Atualizar ficha de treino",
+        security: [["sanctum" => []]],
+        requestBody: new OA\RequestBody(
+            description: "Payload completo da ficha de treino com semanas, rotinas e exercícios (IDs existentes são atualizados, novos são criados)",
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/ArmazenarFichaTreinoBody")
+        ),
+        tags: ["Treinos"],
+        parameters: [
+            new OA\Parameter(name: "ficha_treino", description: "ID da ficha de treino", in: "path", required: true, schema: new OA\Schema(type: "integer", example: 1)),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Ficha de treino atualizada com sucesso",
+                content: new OA\JsonContent(properties: [
+                    new OA\Property(property: "mensagem", type: "string", example: "Ficha de treino atualizada com sucesso."),
+                    new OA\Property(property: "data", ref: "#/components/schemas/FichaTreinoResource"),
+                ])
+            ),
+            new OA\Response(response: 401, description: "Não autenticado", content: new OA\JsonContent(ref: "#/components/schemas/ErroNaoAutenticado")),
+            new OA\Response(response: 403, description: "Não autorizado (não é Personal)", content: new OA\JsonContent(ref: "#/components/schemas/ErroNaoAutorizado")),
+            new OA\Response(response: 404, description: "Ficha de treino não encontrada", content: new OA\JsonContent(ref: "#/components/schemas/ErroNaoEncontrado")),
+            new OA\Response(response: 422, description: "Erro de validação", content: new OA\JsonContent(ref: "#/components/schemas/ErroValidacao")),
+            new OA\Response(
+                response: 500,
+                description: "Erro interno ao atualizar",
+                content: new OA\JsonContent(properties: [
+                    new OA\Property(property: "mensagem", type: "string", example: "Erro interno ao atualizar a ficha de treino. Tente novamente."),
+                ])
+            ),
+        ]
+    )]
+    public function update(AtualizarFichaTreinoRequest $requisicao, FichaTreino $fichaTreino): JsonResponse
+    {
+        try {
+            $fichaTreinoAtualizada = $this->servico->atualizar(
+                $fichaTreino,
+                $requisicao->validated()
+            );
+
+            return response()->json([
+                'mensagem' => 'Ficha de treino atualizada com sucesso.',
+                'data' => new FichaTreinoResource($fichaTreinoAtualizada),
+            ]);
+        } catch (\Throwable) {
+            return response()->json([
+                'mensagem' => 'Erro interno ao atualizar a ficha de treino. Tente novamente.',
             ], 500);
         }
     }

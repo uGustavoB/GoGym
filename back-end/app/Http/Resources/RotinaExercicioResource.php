@@ -16,6 +16,7 @@ class RotinaExercicioResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'exercicio_id' => $this->exercicio_id,
             'ordem' => $this->ordem,
             'tipo_serie' => $this->tipo_serie,
             'series' => $this->series,

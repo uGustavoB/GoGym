@@ -173,15 +173,23 @@ export default function CriarFichaPage() {
     setCurrentStep(step)
   }, [])
 
-  const goNext = useCallback(() => {
-    const nextIndex = currentStepIndex + 1
-    if (nextIndex < STEPS.length) setCurrentStep(STEPS[nextIndex].id)
-  }, [currentStepIndex])
+  const goNext = useCallback(
+    (e?: React.MouseEvent) => {
+      e?.preventDefault()
+      const nextIndex = currentStepIndex + 1
+      if (nextIndex < STEPS.length) setCurrentStep(STEPS[nextIndex].id)
+    },
+    [currentStepIndex, STEPS.length]
+  ) // <-- adicionei STEPS.length às dependências
 
-  const goPrev = useCallback(() => {
-    const prevIndex = currentStepIndex - 1
-    if (prevIndex >= 0) setCurrentStep(STEPS[prevIndex].id)
-  }, [currentStepIndex])
+  const goPrev = useCallback(
+    (e?: React.MouseEvent) => {
+      e?.preventDefault()
+      const prevIndex = currentStepIndex - 1
+      if (prevIndex >= 0) setCurrentStep(STEPS[prevIndex].id)
+    },
+    [currentStepIndex, STEPS.length]
+  )
 
   const {
     register,
@@ -424,7 +432,14 @@ export default function CriarFichaPage() {
       </motion.div>
 
       <motion.div initial="hidden" animate="visible" variants={fadeUp}>
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit)}
+              onKeyDown={(e) => {
+                // Evita submissão acidental ao apertar Enter em inputs comuns
+                if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+                  e.preventDefault();
+                }
+              }}
+        >
           <AnimatePresence mode="wait">
 
             {/* ── Step: Dados Gerais ── */}
@@ -894,13 +909,13 @@ export default function CriarFichaPage() {
 
             <div className="flex items-center gap-3">
               {currentStepIndex < STEPS.length - 1 ? (
-                <Button type="button" onClick={goNext} className="gap-1.5">
+                <Button type="button" onClick={(e) => goNext(e)} className="gap-1.5">
                   Próximo
                   <ChevronRight className="size-4" />
                 </Button>
               ) : (
                 <Button
-                  type="submit"
+                  type={"submit"}
                   disabled={submitting || submitSuccess}
                   size="lg"
                   className="gap-2 min-w-[200px]"

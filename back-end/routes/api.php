@@ -44,7 +44,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         //  Rotas para Gestão de Treinos
         Route::apiResource('exercicio', ExercicioController::class);
-        Route::apiResource('ficha-treino', FichaTreinoController::class)->except(['update']);
+        Route::apiResource('ficha-treino', FichaTreinoController::class);
 
         //  Rotas do App Aluno - Registo de Treinos
         Route::prefix('registro-treino')->group(function () {
