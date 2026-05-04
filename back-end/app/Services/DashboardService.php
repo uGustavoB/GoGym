@@ -403,6 +403,6 @@ class DashboardService
         $year = substr($str, 0, 4);
         $week = substr($str, 4);
 
-        return "{$year}-W{$week}";
+        return "{$year}-S{$week}";
     }
 }
