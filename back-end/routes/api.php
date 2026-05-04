@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AlunoController;
+use App\Http\Controllers\DashboardAlunoController;
+use App\Http\Controllers\DashboardPersonalController;
 use App\Http\Controllers\ExercicioController;
 use App\Http\Controllers\FichaTreinoController;
 use App\Http\Controllers\PersonalController;
@@ -50,6 +52,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::prefix('registro-treino')->group(function () {
             Route::get('/meu-treino', [RegistroTreinoController::class, 'meuTreinoAtual']);
             Route::post('/registrar-sessao', [RegistroTreinoController::class, 'registrarSessao']);
+        });
+
+        //  Dashboard — Personal Trainer
+        Route::prefix('dashboard/personal')->group(function () {
+            Route::get('/resumo', [DashboardPersonalController::class, 'resumo']);
+            Route::get('/alunos/{aluno}/progresso', [DashboardPersonalController::class, 'progressoAluno']);
+        });
+
+        //  Dashboard — Aluno
+        Route::prefix('dashboard/aluno')->group(function () {
+            Route::get('/resumo', [DashboardAlunoController::class, 'resumo']);
+            Route::get('/exercicios/{exercicio}/historico', [DashboardAlunoController::class, 'historicoExercicio']);
         });
     });
 });
