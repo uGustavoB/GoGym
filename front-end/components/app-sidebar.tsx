@@ -11,6 +11,7 @@ import {
   ChevronUp,
   ChevronRight,
   ClipboardList,
+  BarChart3,
 } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import {
@@ -78,6 +79,7 @@ const alunoMenuItems: SidebarItem[] = [
   { title: "Meu Perfil", href: "/dashboard/perfil", icon: User },
   { title: "Meu Personal", href: "/dashboard/meu-personal", icon: Dumbbell },
   { title: "Meu Treino", href: "/dashboard/meu-treino", icon: ClipboardList },
+  { title: "Meu Progresso", href: "/dashboard/meu-treino/historico", icon: BarChart3 },
 ]
 
 export function AppSidebar() {
