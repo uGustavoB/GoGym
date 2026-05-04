@@ -284,7 +284,7 @@ export function FichaDetalheModal({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="flex max-h-[90vh] max-w-4xl sm:max-w-4xl w-[95vw] sm:w-[90vw] flex-col gap-0 p-0">
+      <DialogContent className="flex max-h-[90vh] max-w-4xl sm:max-w-4xl w-[95vw] sm:w-[90vw] flex-col gap-0 p-0 overflow-hidden">
         {/* Accessible hidden description */}
         <DialogHeader className="sr-only">
           <DialogTitle>Detalhes da Ficha de Treino</DialogTitle>
@@ -307,7 +307,7 @@ export function FichaDetalheModal({
         ) : (
           <>
             {/* ── Custom Header ── */}
-            <div className="flex items-start justify-between gap-4 border-b px-6 py-5">
+            <div className="flex shrink-0 items-start justify-between gap-4 border-b px-6 py-5">
               <div className="min-w-0 space-y-1.5">
                 <div className="flex flex-wrap items-center gap-2.5">
                   <h2 className="truncate text-xl font-semibold tracking-tight">
@@ -336,7 +336,7 @@ export function FichaDetalheModal({
               defaultValue="visao-geral"
               className="flex min-h-0 flex-1 flex-col"
             >
-              <div className="border-b px-6">
+              <div className="shrink-0 border-b px-6">
                 <TabsList variant="line" className="w-full sm:w-auto">
                   <TabsTrigger value="visao-geral" className="gap-1.5">
                     <ClipboardList className="size-3.5" />
@@ -361,7 +361,7 @@ export function FichaDetalheModal({
                 </TabsList>
               </div>
 
-              <ScrollArea className="flex-1">
+              <div className="flex-1 overflow-y-auto min-h-0">
                 <div className="p-6">
                   {/* ── Tab: Visão Geral ── */}
                   <TabsContent value="visao-geral" className="mt-0">
@@ -610,7 +610,7 @@ export function FichaDetalheModal({
                     )}
                   </TabsContent>
                 </div>
-              </ScrollArea>
+              </div>
             </Tabs>
           </>
         )}
