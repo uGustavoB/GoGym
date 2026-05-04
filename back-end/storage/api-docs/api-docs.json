@@ -1043,6 +1043,487 @@
                 }
             }
         },
+        "/dashboard/aluno/resumo": {
+            "get": {
+                "tags": [
+                    "Dashboard - Aluno"
+                ],
+                "summary": "Resumo geral do Aluno",
+                "description": "Retorna as métricas de resumo da própria conta do aluno logado.",
+                "operationId": "7e3702bfcc2951fc8b5c05c41145fdfa",
+                "responses": {
+                    "200": {
+                        "description": "Resumo do dashboard do aluno",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "total_sessoes": {
+                                                    "type": "integer",
+                                                    "example": 45
+                                                },
+                                                "media_duracao_minutos": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 58.5
+                                                },
+                                                "media_esforco": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 7.2
+                                                },
+                                                "ultima_sessao": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2023-10-18"
+                                                },
+                                                "sequencia_dias": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "melhor_sequencia": {
+                                                    "type": "integer",
+                                                    "example": 12
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado"
+                    },
+                    "403": {
+                        "description": "Acesso negado - Utilizador não é um aluno"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/dashboard/aluno/exercicio/{exercicio}/historico": {
+            "get": {
+                "tags": [
+                    "Dashboard - Aluno"
+                ],
+                "summary": "Histórico de um Exercício",
+                "description": "Retorna o histórico de cargas e volume de um exercício específico executado pelo aluno, filtrado por período.",
+                "operationId": "5c1eb73a990fc2d07faa6e2b904b40eb",
+                "parameters": [
+                    {
+                        "name": "exercicio",
+                        "in": "path",
+                        "description": "ID do Exercício",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "period",
+                        "in": "query",
+                        "description": "Período para filtro dos dados",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "30d",
+                            "enum": [
+                                "7d",
+                                "30d",
+                                "3m",
+                                "6m",
+                                "1y",
+                                "all"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Histórico do exercício",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "exercicio": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "nome": {
+                                                            "type": "string",
+                                                            "example": "Agachamento Livre"
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                },
+                                                "periodo": {
+                                                    "type": "string",
+                                                    "example": "30d"
+                                                },
+                                                "historico": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "data": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2023-10-18"
+                                                            },
+                                                            "series": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "numero_serie": {
+                                                                            "type": "integer",
+                                                                            "example": 1
+                                                                        },
+                                                                        "repeticoes": {
+                                                                            "type": "integer",
+                                                                            "example": 12
+                                                                        },
+                                                                        "carga": {
+                                                                            "type": "number",
+                                                                            "format": "float",
+                                                                            "example": 40
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            },
+                                                            "carga_maxima": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 45
+                                                            },
+                                                            "volume_sessao": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 1500
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado"
+                    },
+                    "403": {
+                        "description": "Acesso negado - Utilizador não é um aluno"
+                    },
+                    "404": {
+                        "description": "Exercício não encontrado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/dashboard/personal/resumo": {
+            "get": {
+                "tags": [
+                    "Dashboard - Personal"
+                ],
+                "summary": "Resumo geral do Personal Trainer",
+                "description": "Retorna estatísticas gerais dos alunos ativos do personal trainer logado.",
+                "operationId": "007457d64222466e981719206b092bab",
+                "responses": {
+                    "200": {
+                        "description": "Resumo do dashboard",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "total_alunos_ativos": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "adesao_semanal": {
+                                                    "properties": {
+                                                        "sessoes_planejadas": {
+                                                            "type": "integer",
+                                                            "example": 25
+                                                        },
+                                                        "sessoes_concluidas": {
+                                                            "type": "integer",
+                                                            "example": 20
+                                                        },
+                                                        "taxa_percentual": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 80
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "media_esforco_global": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 7.5
+                                                },
+                                                "top_frequentes": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "aluno_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "nome": {
+                                                                "type": "string",
+                                                                "example": "João Silva"
+                                                            },
+                                                            "sessoes": {
+                                                                "type": "integer",
+                                                                "example": 12
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "menos_frequentes": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "aluno_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "nome": {
+                                                                "type": "string",
+                                                                "example": "Maria Souza"
+                                                            },
+                                                            "sessoes": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado"
+                    },
+                    "403": {
+                        "description": "Acesso negado - Utilizador não é um personal trainer"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/dashboard/personal/aluno/{aluno}/progresso": {
+            "get": {
+                "tags": [
+                    "Dashboard - Personal"
+                ],
+                "summary": "Progresso de um Aluno específico",
+                "description": "Retorna as métricas de progresso e volume de carga de um aluno, filtradas por período.",
+                "operationId": "d01dc8c57ae3d5e5551a20c8cdc8d082",
+                "parameters": [
+                    {
+                        "name": "aluno",
+                        "in": "path",
+                        "description": "ID do Aluno",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "period",
+                        "in": "query",
+                        "description": "Período para filtro dos dados",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "30d",
+                            "enum": [
+                                "7d",
+                                "30d",
+                                "3m",
+                                "6m",
+                                "1y",
+                                "all"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Progresso do aluno",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "periodo": {
+                                                    "type": "string",
+                                                    "example": "30d"
+                                                },
+                                                "volume_load_semanal": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "semana": {
+                                                                "type": "string",
+                                                                "example": "2023-W42"
+                                                            },
+                                                            "inicio_semana": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2023-10-16"
+                                                            },
+                                                            "volume_load": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 12500.5
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "carga_maxima_por_exercicio": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "exercicio_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "exercicio_nome": {
+                                                                "type": "string",
+                                                                "example": "Supino Reto"
+                                                            },
+                                                            "evolucao": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "semana": {
+                                                                            "type": "string",
+                                                                            "example": "2023-W42"
+                                                                        },
+                                                                        "carga_maxima": {
+                                                                            "type": "number",
+                                                                            "format": "float",
+                                                                            "example": 80
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "esforco_por_sessao": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "data": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2023-10-16"
+                                                            },
+                                                            "esforco_percebido": {
+                                                                "type": "integer",
+                                                                "example": 8
+                                                            },
+                                                            "duracao_minutos": {
+                                                                "type": "integer",
+                                                                "example": 60
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "frequencia_semanal": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "semana": {
+                                                                "type": "string",
+                                                                "example": "2023-W42"
+                                                            },
+                                                            "sessoes": {
+                                                                "type": "integer",
+                                                                "example": 4
+                                                            },
+                                                            "duracao_media": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 55.5
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado"
+                    },
+                    "403": {
+                        "description": "Acesso negado - Utilizador não é um personal trainer ou aluno não vinculado"
+                    },
+                    "404": {
+                        "description": "Aluno não encontrado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/exercicio": {
             "get": {
                 "tags": [
@@ -3547,6 +4028,14 @@
         {
             "name": "App Aluno - Execução",
             "description": "Visualização do treino atual e registo de sessões de treino pelo aluno (requer e-mail verificado)"
+        },
+        {
+            "name": "Dashboard - Aluno",
+            "description": "Dashboard - Aluno"
+        },
+        {
+            "name": "Dashboard - Personal",
+            "description": "Dashboard - Personal"
         }
     ]
 }
