@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useMemo } from "react"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import {
   Dumbbell,
@@ -9,6 +10,7 @@ import {
   Clock,
   Target,
   Trophy,
+  Plus,
 } from "lucide-react"
 import {
   Card,
@@ -33,6 +35,7 @@ import { toast } from "sonner"
 import { useAuth } from "@/lib/auth-context"
 import {
   buscarFichaAluno,
+  listarFichasAluno,
   registrarExecucaoSessao,
   type FichaTreino,
   type RotinaSessao,
@@ -62,7 +65,10 @@ interface SerieInput {
 }
 
 export default function MeuTreinoPage() {
-  const { tipoPerfil } = useAuth()
+  const { tipoPerfil, personalVinculado } = useAuth()
+  const router = useRouter()
+  const [fichas, setFichas] = useState<FichaTreino[]>([])
+  const [fichaAtiva, setFichaAtiva] = useState<number | null>(null)
   const [ficha, setFicha] = useState<FichaTreino | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -77,18 +83,67 @@ export default function MeuTreinoPage() {
   const [concluido, setConcluido] = useState(false)
 
   useEffect(() => {
-    buscarFichaAluno()
-      .then((res) => {
+    async function fetchFichas() {
+      try {
+        // Tenta buscar a ficha ativa do aluno (endpoint principal)
+        const res = await buscarFichaAluno()
         setFicha(res.data)
+        setFichas([res.data])
+        setFichaAtiva(res.data.id)
         if (res.data.rotinas.length > 0) {
           setRotinaAtiva(res.data.rotinas[0].letra_nome)
         }
-      })
-      .catch(() => {
-        setError(true)
-      })
-      .finally(() => setLoading(false))
-  }, [])
+
+        // Se aluno sem personal, busca todas as fichas para seleção
+        if (!personalVinculado) {
+          try {
+            const allRes = await listarFichasAluno()
+            if (allRes.data.length > 0) {
+              setFichas(allRes.data)
+            }
+          } catch {
+            // Fallback: manter apenas a ficha principal
+          }
+        }
+      } catch {
+        // Se não encontrou ficha principal, tenta listar todas (aluno autônomo)
+        if (!personalVinculado) {
+          try {
+            const allRes = await listarFichasAluno()
+            if (allRes.data.length > 0) {
+              setFichas(allRes.data)
+              setFicha(allRes.data[0])
+              setFichaAtiva(allRes.data[0].id)
+              if (allRes.data[0].rotinas.length > 0) {
+                setRotinaAtiva(allRes.data[0].rotinas[0].letra_nome)
+              }
+            } else {
+              setError(true)
+            }
+          } catch {
+            setError(true)
+          }
+        } else {
+          setError(true)
+        }
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchFichas()
+  }, [personalVinculado])
+
+  // Quando troca a ficha ativa
+  useEffect(() => {
+    if (fichaAtiva === null || fichas.length === 0) return
+    const selected = fichas.find(f => f.id === fichaAtiva)
+    if (selected && selected.id !== ficha?.id) {
+      setFicha(selected)
+      if (selected.rotinas.length > 0) {
+        setRotinaAtiva(selected.rotinas[0].letra_nome)
+      }
+    }
+  }, [fichaAtiva, fichas])
 
   // Rotina selecionada
   const rotinaSelecionada = useMemo(() => {
@@ -281,10 +336,22 @@ export default function MeuTreinoPage() {
           <Dumbbell className="size-7 text-muted-foreground" />
         </div>
         <h2 className="text-lg font-medium">Nenhum treino encontrado</h2>
-        <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-          O seu Personal Trainer ainda não montou uma ficha de treino para você.
-          Entre em contacto com ele!
-        </p>
+        {personalVinculado ? (
+          <p className="text-sm text-muted-foreground mt-1 max-w-sm">
+            O seu Personal Trainer ainda não montou uma ficha de treino para você.
+            Entre em contacto com ele!
+          </p>
+        ) : (
+          <>
+            <p className="text-sm text-muted-foreground mt-1 max-w-sm">
+              Você ainda não tem um treino configurado. Crie a sua própria ficha de treino!
+            </p>
+            <Button className="mt-4 gap-2" onClick={() => router.push("/dashboard/meu-treino/criar")}>
+              <Plus className="size-4" />
+              Criar Meu Treino
+            </Button>
+          </>
+        )}
       </div>
     )
   }
@@ -324,30 +391,55 @@ export default function MeuTreinoPage() {
     <div className="space-y-6">
       {/* Header */}
       <motion.div initial="hidden" animate="visible" custom={0} variants={fadeUp}>
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">Meu Treino</h1>
-          <p className="text-muted-foreground flex flex-wrap gap-1.5 items-center">
-            <span className="font-medium text-foreground">{ficha.nome}</span>
-            {ficha.objetivo && (
-              <>
-                <span className="text-muted-foreground/60">•</span>
-                <span>{ficha.objetivo}</span>
-              </>
-            )}
-            {semanaAtiva && (
-              <>
-                <span className="text-muted-foreground/60">•</span>
-                <Badge variant="secondary" className="px-1.5 font-normal">
-                  Semana {semanaAtiva.numero_semana} ({semanaAtiva.descricao_fase})
-                </Badge>
-              </>
-            )}
-          </p>
+        <div className="flex items-center justify-between w-full">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-bold tracking-tight">Meu Treino</h1>
+            <p className="text-muted-foreground flex flex-wrap gap-1.5 items-center">
+              <span className="font-medium text-foreground">{ficha.nome}</span>
+              {ficha.objetivo && (
+                <>
+                  <span className="text-muted-foreground/60">•</span>
+                  <span>{ficha.objetivo}</span>
+                </>
+              )}
+              {semanaAtiva && (
+                <>
+                  <span className="text-muted-foreground/60">•</span>
+                  <Badge variant="secondary" className="px-1.5 font-normal">
+                    Semana {semanaAtiva.numero_semana} ({semanaAtiva.descricao_fase})
+                  </Badge>
+                </>
+              )}
+            </p>
+          </div>
+          {!personalVinculado && (
+            <Button variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={() => router.push("/dashboard/meu-treino/criar")}>
+              <Plus className="size-3.5" /> Nova Ficha
+            </Button>
+          )}
         </div>
       </motion.div>
 
+      {/* Ficha Selector (quando aluno autônomo tem múltiplas fichas) */}
+      {!personalVinculado && fichas.length > 1 && (
+        <motion.div initial="hidden" animate="visible" custom={1} variants={fadeUp}>
+          <div className="flex flex-wrap gap-2">
+            {fichas.map((f) => (
+              <Button
+                key={f.id}
+                variant={fichaAtiva === f.id ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFichaAtiva(f.id)}
+              >
+                {f.nome}
+              </Button>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
       {/* Rotina Selector */}
-      <motion.div initial="hidden" animate="visible" custom={1} variants={fadeUp}>
+      <motion.div initial="hidden" animate="visible" custom={!personalVinculado && fichas.length > 1 ? 2 : 1} variants={fadeUp}>
         <div className="flex flex-wrap gap-2">
           {ficha.rotinas.map((rotina) => (
             <Button

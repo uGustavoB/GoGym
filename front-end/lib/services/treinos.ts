@@ -96,7 +96,7 @@ export interface CriarSemanaPayload {
 }
 
 export interface CriarFichaPayload {
-  aluno_id: number
+  aluno_id?: number
   nome: string
   objetivo?: string
   observacoes_gerais?: string
@@ -211,6 +211,10 @@ export function listarFichasTreino(page: number = 1) {
   return api<PaginatedResponse<FichaTreino>>(`/ficha-treino?page=${page}`)
 }
 
+export function listarFichasAluno() {
+  return api<PaginatedResponse<FichaTreino>>(`/ficha-treino`)
+}
+
 export function buscarFichaTreino(id: number) {
   return api<{ data: FichaTreino }>(`/ficha-treino/${id}`)
 }
@@ -238,7 +242,7 @@ export interface AtualizarSemanaPayload extends CriarSemanaPayload {
 }
 
 export interface AtualizarFichaPayload {
-  aluno_id: number
+  aluno_id?: number
   nome: string
   objetivo?: string
   observacoes_gerais?: string
