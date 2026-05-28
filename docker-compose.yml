@@ -6,8 +6,6 @@ services:
     container_name: gogym_app
     ports:
       - "8008:8000"
-    volumes:
-      - ./back-end:/var/www/html
     environment:
       - NIXPACKS_NODE_VERSION=${NIXPACKS_NODE_VERSION}
       - APP_NAME=${APP_NAME}
@@ -43,8 +41,6 @@ services:
       context: ./back-end
       dockerfile: Dockerfile
     container_name: gogym_queue
-    volumes:
-      - ./back-end:/var/www/html
     environment:
       - APP_NAME=${APP_NAME}
       - APP_ENV=${APP_ENV}
