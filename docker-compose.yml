@@ -6,6 +6,13 @@ services:
     container_name: gogym_app
     ports:
       - "8008:8000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.gogym-app.rule=Host(`api.gogym.ugustavodev.com.br`)"
+      - "traefik.http.routers.gogym-app.entrypoints=websecure"
+      - "traefik.http.routers.gogym-app.tls=true"
+      - "traefik.http.routers.gogym-app.tls.certresolver=letsencrypt"
+      - "traefik.http.services.gogym-app.loadbalancer.server.port=8000"
     environment:
       - NIXPACKS_NODE_VERSION=${NIXPACKS_NODE_VERSION}
       - APP_NAME=${APP_NAME}
@@ -34,6 +41,7 @@ services:
                php artisan serve --host=0.0.0.0 --port=8000"
     networks:
       - gogym_network
+      - coolify
 
   queue:
     build:
@@ -97,6 +105,8 @@ services:
 networks:
   gogym_network:
     driver: bridge
+  coolify:
+    external: true
 
 volumes:
   gogym_mysql_data:
