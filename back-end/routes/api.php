@@ -1,7 +1,12 @@
 <?php
 
 use App\Http\Controllers\AlunoController;
+use App\Http\Controllers\DashboardAlunoController;
+use App\Http\Controllers\DashboardPersonalController;
+use App\Http\Controllers\ExercicioController;
+use App\Http\Controllers\FichaTreinoController;
 use App\Http\Controllers\PersonalController;
+use App\Http\Controllers\RegistroTreinoController;
 use App\Http\Controllers\VerificacaoEmailController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AutenticacaoController;
@@ -38,5 +43,27 @@ Route::middleware('auth:sanctum')->group(function () {
 
         //  Rotas para CRUD de alunos
         Route::apiResource('aluno', AlunoController::class);
+
+        //  Rotas para Gestão de Treinos
+        Route::apiResource('exercicio', ExercicioController::class);
+        Route::apiResource('ficha-treino', FichaTreinoController::class);
+
+        //  Rotas do App Aluno - Registo de Treinos
+        Route::prefix('registro-treino')->group(function () {
+            Route::get('/meu-treino', [RegistroTreinoController::class, 'meuTreinoAtual']);
+            Route::post('/registrar-sessao', [RegistroTreinoController::class, 'registrarSessao']);
+        });
+
+        //  Dashboard — Personal Trainer
+        Route::prefix('dashboard/personal')->group(function () {
+            Route::get('/resumo', [DashboardPersonalController::class, 'resumo']);
+            Route::get('/alunos/{aluno}/progresso', [DashboardPersonalController::class, 'progressoAluno']);
+        });
+
+        //  Dashboard — Aluno
+        Route::prefix('dashboard/aluno')->group(function () {
+            Route::get('/resumo', [DashboardAlunoController::class, 'resumo']);
+            Route::get('/exercicios/{exercicio}/historico', [DashboardAlunoController::class, 'historicoExercicio']);
+        });
     });
 });

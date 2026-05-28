@@ -33,6 +33,9 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: "Personais", description: "CRUD de Personal Trainers (requer e-mail verificado)")]
 #[OA\Tag(name: "Alunos", description: "CRUD de Alunos (requer e-mail verificado)")]
 #[OA\Tag(name: "Convites", description: "Sistema de convites para vincular alunos a personais")]
+#[OA\Tag(name: "Exercícios", description: "CRUD de Exercícios do Personal Trainer (requer e-mail verificado)")]
+#[OA\Tag(name: "Treinos", description: "Gestão de Fichas de Treino, semanas e rotinas (requer e-mail verificado)")]
+#[OA\Tag(name: "App Aluno - Execução", description: "Visualização do treino atual e registo de sessões de treino pelo aluno (requer e-mail verificado)")]
 
 // --- Schemas reutilizáveis ---
 
@@ -126,6 +129,189 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: "per_page", type: "integer", example: 15),
         new OA\Property(property: "to", type: "integer", example: 5),
         new OA\Property(property: "total", type: "integer", example: 5),
+    ]
+)]
+
+// --- Schemas do Módulo de Treinos ---
+
+#[OA\Schema(
+    schema: "ExercicioResource",
+    properties: [
+        new OA\Property(property: "id", type: "integer", example: 1),
+        new OA\Property(property: "nome", type: "string", example: "Supino Reto com Barra"),
+        new OA\Property(property: "tipo", type: "string", enum: ["superior", "inferior", "core", "cardio", "full_body"], example: "superior"),
+        new OA\Property(property: "grupo_muscular", type: "string", enum: ["peitoral", "costas", "ombros", "biceps", "triceps", "quadriceps", "posterior_coxa", "gluteos", "panturrilhas", "abdomen", "outro"], example: "peitoral"),
+        new OA\Property(property: "video_url", type: "string", nullable: true, example: "https://www.youtube.com/watch?v=exemplo"),
+        new OA\Property(property: "instrucoes", type: "string", nullable: true, example: "Mantenha as escápulas retraídas durante todo o movimento."),
+        new OA\Property(property: "is_global", type: "boolean", example: false, description: "true se for um exercício da base global (personal_id = null)"),
+        new OA\Property(property: "cadastrado_em", type: "string", format: "date-time", example: "2026-05-01 10:00:00"),
+    ]
+)]
+#[OA\Schema(
+    schema: "FichaSemanaResource",
+    properties: [
+        new OA\Property(property: "id", type: "integer", example: 1),
+        new OA\Property(property: "numero_semana", type: "integer", example: 1),
+        new OA\Property(property: "descricao_fase", type: "string", example: "Adaptação Inicial"),
+        new OA\Property(property: "repeticoes_alvo", type: "string", example: "12-15"),
+        new OA\Property(property: "rir_alvo", type: "integer", nullable: true, example: 2),
+        new OA\Property(property: "intensidade_carga", type: "string", nullable: true, example: "Leve a Moderada"),
+    ]
+)]
+#[OA\Schema(
+    schema: "RotinaExercicioResource",
+    properties: [
+        new OA\Property(property: "id", type: "integer", example: 1),
+        new OA\Property(property: "ordem", type: "integer", example: 1),
+        new OA\Property(property: "tipo_serie", type: "string", enum: ["aquecimento", "preparacao", "trabalho", "mista"], example: "trabalho"),
+        new OA\Property(property: "series", type: "integer", example: 4),
+        new OA\Property(property: "repeticoes", type: "string", nullable: true, example: "12"),
+        new OA\Property(property: "rir", type: "integer", nullable: true, example: 2),
+        new OA\Property(property: "carga_sugerida", type: "string", nullable: true, example: "20kg cada lado"),
+        new OA\Property(property: "tecnica_avancada", type: "string", nullable: true, enum: ["nenhuma", "drop-set", "bi-set", "rest-pause", "cluster", "ponto_zero"], example: "nenhuma"),
+        new OA\Property(property: "descanso_segundos", type: "integer", nullable: true, example: 90),
+        new OA\Property(property: "observacoes", type: "string", nullable: true, example: "Pausa de 1 segundo na fase excêntrica"),
+        new OA\Property(property: "exercicio", ref: "#/components/schemas/ExercicioResource", nullable: true),
+    ]
+)]
+#[OA\Schema(
+    schema: "RotinaSessaoResource",
+    properties: [
+        new OA\Property(property: "id", type: "integer", example: 1),
+        new OA\Property(property: "letra_nome", type: "string", example: "A"),
+        new OA\Property(property: "exercicios", type: "array", items: new OA\Items(ref: "#/components/schemas/RotinaExercicioResource")),
+    ]
+)]
+#[OA\Schema(
+    schema: "FichaTreinoResource",
+    properties: [
+        new OA\Property(property: "id", type: "integer", example: 1),
+        new OA\Property(property: "aluno_id", type: "integer", example: 1),
+        new OA\Property(property: "nome", type: "string", example: "Hipertrofia Fase 1"),
+        new OA\Property(property: "objetivo", type: "string", nullable: true, example: "Aumento de massa muscular"),
+        new OA\Property(property: "observacoes_gerais", type: "string", nullable: true, example: "Foco na fase excêntrica"),
+        new OA\Property(property: "data_inicio", type: "string", format: "date", example: "2026-05-01"),
+        new OA\Property(property: "data_vencimento", type: "string", format: "date", nullable: true, example: "2026-06-01"),
+        new OA\Property(property: "aluno", ref: "#/components/schemas/AlunoResource", nullable: true),
+        new OA\Property(property: "semanas", type: "array", items: new OA\Items(ref: "#/components/schemas/FichaSemanaResource")),
+        new OA\Property(property: "rotinas", type: "array", items: new OA\Items(ref: "#/components/schemas/RotinaSessaoResource")),
+        new OA\Property(property: "cadastrado_em", type: "string", format: "date-time", example: "2026-05-01 10:00:00"),
+        new OA\Property(property: "atualizado_em", type: "string", format: "date-time", example: "2026-05-01 10:00:00"),
+    ]
+)]
+#[OA\Schema(
+    schema: "ArmazenarFichaTreinoBody",
+    required: ["aluno_id", "nome", "data_inicio", "semanas", "rotinas"],
+    properties: [
+        new OA\Property(property: "aluno_id", type: "integer", example: 1, description: "ID do aluno vinculado ao personal autenticado"),
+        new OA\Property(property: "nome", type: "string", example: "Hipertrofia Fase 1"),
+        new OA\Property(property: "objetivo", type: "string", nullable: true, example: "Aumento de massa muscular"),
+        new OA\Property(property: "observacoes_gerais", type: "string", nullable: true, example: "Foco na fase excêntrica"),
+        new OA\Property(property: "data_inicio", type: "string", format: "date", example: "2026-05-01"),
+        new OA\Property(property: "data_vencimento", type: "string", format: "date", nullable: true, example: "2026-06-01"),
+        new OA\Property(
+            property: "semanas",
+            type: "array",
+            items: new OA\Items(
+                required: ["numero_semana", "descricao_fase", "repeticoes_alvo"],
+                properties: [
+                    new OA\Property(property: "numero_semana", type: "integer", example: 1),
+                    new OA\Property(property: "descricao_fase", type: "string", example: "Adaptação Inicial"),
+                    new OA\Property(property: "repeticoes_alvo", type: "string", example: "12-15"),
+                    new OA\Property(property: "rir_alvo", type: "integer", nullable: true, example: 2),
+                    new OA\Property(property: "intensidade_carga", type: "string", nullable: true, example: "Leve a Moderada"),
+                ]
+            )
+        ),
+        new OA\Property(
+            property: "rotinas",
+            type: "array",
+            items: new OA\Items(
+                required: ["letra_nome", "exercicios"],
+                properties: [
+                    new OA\Property(property: "letra_nome", type: "string", example: "A"),
+                    new OA\Property(
+                        property: "exercicios",
+                        type: "array",
+                        items: new OA\Items(
+                            required: ["exercicio_id", "ordem", "tipo_serie", "series"],
+                            properties: [
+                                new OA\Property(property: "exercicio_id", type: "integer", example: 1),
+                                new OA\Property(property: "ordem", type: "integer", example: 1),
+                                new OA\Property(property: "tipo_serie", type: "string", enum: ["aquecimento", "preparacao", "trabalho", "mista"], example: "trabalho"),
+                                new OA\Property(property: "series", type: "integer", example: 4),
+                                new OA\Property(property: "repeticoes", type: "string", nullable: true, example: "12"),
+                                new OA\Property(property: "rir", type: "integer", nullable: true, example: 2),
+                                new OA\Property(property: "carga_sugerida", type: "string", nullable: true, example: "20kg cada lado"),
+                                new OA\Property(property: "tecnica_avancada", type: "string", nullable: true, enum: ["nenhuma", "drop-set", "bi-set", "rest-pause", "cluster", "ponto_zero"], example: "nenhuma"),
+                                new OA\Property(property: "descanso_segundos", type: "integer", nullable: true, example: 90),
+                                new OA\Property(property: "observacoes", type: "string", nullable: true, example: "Pausa de 1 segundo"),
+                            ]
+                        )
+                    ),
+                ]
+            )
+        ),
+    ]
+)]
+
+// --- Schemas do Módulo App Aluno (Execução) ---
+
+#[OA\Schema(
+    schema: "LogSerieResource",
+    properties: [
+        new OA\Property(property: "id", type: "integer", example: 1),
+        new OA\Property(property: "rotina_exercicio_id", type: "integer", example: 1),
+        new OA\Property(property: "numero_serie", type: "integer", example: 1),
+        new OA\Property(property: "repeticoes_realizadas", type: "integer", example: 12),
+        new OA\Property(property: "carga_realizada", type: "string", example: "20kg"),
+        new OA\Property(property: "exercicio", ref: "#/components/schemas/RotinaExercicioResource", nullable: true),
+    ]
+)]
+#[OA\Schema(
+    schema: "LogSessaoResource",
+    properties: [
+        new OA\Property(property: "id", type: "integer", example: 1),
+        new OA\Property(property: "aluno_id", type: "integer", example: 1),
+        new OA\Property(
+            property: "rotina_sessao",
+            properties: [
+                new OA\Property(property: "id", type: "integer", example: 1),
+                new OA\Property(property: "letra_nome", type: "string", example: "A"),
+            ],
+            type: "object",
+            nullable: true
+        ),
+        new OA\Property(property: "data_execucao", type: "string", format: "date", example: "2026-04-24"),
+        new OA\Property(property: "esforco_percebido", type: "integer", example: 7),
+        new OA\Property(property: "duracao_minutos", type: "integer", example: 55),
+        new OA\Property(property: "observacoes_aluno", type: "string", nullable: true, example: "Treino pesado hoje"),
+        new OA\Property(property: "series", type: "array", items: new OA\Items(ref: "#/components/schemas/LogSerieResource")),
+        new OA\Property(property: "registado_em", type: "string", format: "date-time", example: "2026-04-24 15:00:00"),
+    ]
+)]
+#[OA\Schema(
+    schema: "RegistrarSessaoBody",
+    required: ["rotina_sessao_id", "data_execucao", "esforco_percebido", "duracao_minutos", "series"],
+    properties: [
+        new OA\Property(property: "rotina_sessao_id", type: "integer", example: 1, description: "ID da rotina (A, B, C...) que o aluno realizou"),
+        new OA\Property(property: "data_execucao", type: "string", format: "date", example: "2026-04-24"),
+        new OA\Property(property: "esforco_percebido", type: "integer", example: 7, description: "Percepção Subjetiva de Esforço (PSE), de 1 a 10"),
+        new OA\Property(property: "duracao_minutos", type: "integer", example: 55, description: "Duração total da sessão em minutos"),
+        new OA\Property(property: "observacoes_aluno", type: "string", nullable: true, example: "Treino pesado hoje"),
+        new OA\Property(
+            property: "series",
+            type: "array",
+            items: new OA\Items(
+                required: ["rotina_exercicio_id", "numero_serie", "repeticoes_realizadas", "carga_realizada"],
+                properties: [
+                    new OA\Property(property: "rotina_exercicio_id", type: "integer", example: 1, description: "ID do exercício da rotina (prescrição original)"),
+                    new OA\Property(property: "numero_serie", type: "integer", example: 1),
+                    new OA\Property(property: "repeticoes_realizadas", type: "integer", example: 12),
+                    new OA\Property(property: "carga_realizada", type: "string", example: "20kg cada lado"),
+                ]
+            )
+        ),
     ]
 )]
 class SwaggerInfo

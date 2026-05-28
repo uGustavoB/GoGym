@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import Link from "next/link"
 import {
   Users,
   UserX,
@@ -13,6 +14,8 @@ import {
   Link as LinkIcon,
   Search,
   Filter,
+  TrendingUp,
+  MoreHorizontal,
 } from "lucide-react"
 import {
   listarAlunosRequest,
@@ -62,6 +65,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
 import type { Variants } from "framer-motion"
 
@@ -446,15 +457,31 @@ export default function AlunosPage() {
                               </Badge>
                             </TableCell>
                             <TableCell className="text-right">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                onClick={() => setUnlinkTarget(aluno)}
-                              >
-                                <UserX className="mr-1.5 size-3.5" />
-                                Desvincular
-                              </Button>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                                    <span className="sr-only">Abrir menu</span>
+                                    <MoreHorizontal className="size-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                                  <DropdownMenuItem asChild className={"focus:text-primary"}>
+                                    <Link href={`/dashboard/alunos/${aluno.id}/progresso`} className="cursor-pointer flex items-center">
+                                      <TrendingUp className="mr-2 size-4" />
+                                      Progresso
+                                    </Link>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem 
+                                    className="text-destructive focus:text-destructive  cursor-pointer flex items-center"
+                                    onClick={() => setUnlinkTarget(aluno)}
+                                  >
+                                    <UserX className="mr-2 size-4" />
+                                    Desvincular
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </TableCell>
                           </motion.tr>
                         ))}

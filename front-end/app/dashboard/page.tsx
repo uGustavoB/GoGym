@@ -1,34 +1,29 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { motion } from "framer-motion"
 import {
   Users,
-  User,
-  Dumbbell,
   Activity,
-  Ruler,
-  Weight,
-  ArrowRight,
+  Flame,
+  CalendarDays,
+  Timer,
+  Zap,
+  Trophy,
+  Dumbbell,
 } from "lucide-react"
-import Link from "next/link"
+import { KpiCard } from "@/components/shared/charts/kpi-card"
+import { ChartErrorState } from "@/components/shared/charts/chart-error-state"
+import { RankingFrequencia } from "@/components/dashboard/personal/ranking-frequencia"
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
-import {
-  listarAlunosRequest,
-  exibirAlunoRequest,
-  type AlunoResource,
-  type PaginatedResponse,
-} from "@/lib/api"
+  buscarResumoPersonal,
+  buscarResumoAluno,
+  type PersonalResumo,
+  type AlunoResumo,
+} from "@/lib/services/dashboard"
+import { format, parseISO } from "date-fns"
+import { ptBR } from "date-fns/locale"
 
 import type { Variants } from "framer-motion"
 
@@ -37,226 +32,250 @@ const fadeUp: Variants = {
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.1, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] },
+    transition: { delay: i * 0.08, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] },
   }),
 }
 
+// ── Personal Trainer Dashboard ──
+
 function PersonalDashboard() {
   const { user } = useAuth()
-  const [stats, setStats] = useState<{ total: number; ativos: number } | null>(null)
+  const [data, setData] = useState<PersonalResumo | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    listarAlunosRequest(1)
-      .then((res: PaginatedResponse<AlunoResource>) => {
-        const total = res.meta.total
-        const ativos = res.data.filter((a) => a.status_conta === "Ativo").length
-        setStats({ total, ativos })
-      })
-      .catch(() => setStats({ total: 0, ativos: 0 }))
+  const fetchData = useCallback(() => {
+    setLoading(true)
+    setError(null)
+    buscarResumoPersonal()
+      .then((res) => setData(res.data))
+      .catch((err) => setError(err.message || "Erro ao carregar dashboard."))
       .finally(() => setLoading(false))
   }, [])
 
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  if (error && !loading) {
+    return (
+      <div className="space-y-6">
+        <Header nome={user?.nome} subtitulo="Aqui está o resumo do seu painel." />
+        <ChartErrorState message={error} onRetry={fetchData} />
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
-      <motion.div
-        initial="hidden"
-        animate="visible"
-        custom={0}
-        variants={fadeUp}
-      >
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">
-            Olá, {user?.nome.split(" ")[0]}! 👋
-          </h1>
-          <p className="text-muted-foreground">
-            Aqui está o resumo do seu painel.
-          </p>
-        </div>
-      </motion.div>
+      <Header nome={user?.nome} subtitulo="Aqui está o resumo do seu painel." />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {/* KPI Cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <motion.div initial="hidden" animate="visible" custom={1} variants={fadeUp}>
-          <Card className="relative overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total de Alunos
-              </CardTitle>
-              <Users className="size-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <Skeleton className="h-8 w-16" />
-              ) : (
-                <div className="text-3xl font-bold">{stats?.total ?? 0}</div>
-              )}
-              <p className="text-xs text-muted-foreground mt-1">
-                cadastrados na plataforma
-              </p>
-            </CardContent>
-            <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-primary/60 to-primary" />
-          </Card>
+          <KpiCard
+            title="Alunos Ativos"
+            value={data?.total_alunos_ativos ?? 0}
+            subtitle="vinculados atualmente"
+            icon={Users}
+            loading={loading}
+            gradientFrom="from-primary/60"
+            gradientTo="to-primary"
+          />
         </motion.div>
 
         <motion.div initial="hidden" animate="visible" custom={2} variants={fadeUp}>
-          <Card className="relative overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Alunos Ativos
-              </CardTitle>
-              <Activity className="size-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <Skeleton className="h-8 w-16" />
-              ) : (
-                <div className="text-3xl font-bold text-primary">
-                  {stats?.ativos ?? 0}
-                </div>
-              )}
-              <p className="text-xs text-muted-foreground mt-1">
-                atualmente vinculados
-              </p>
-            </CardContent>
-            <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-chart-2/60 to-chart-2" />
-          </Card>
+          <KpiCard
+            title="Adesão Semanal"
+            value={data ? `${data.adesao_semanal.taxa_percentual}%` : "—"}
+            subtitle={
+              data
+                ? `${data.adesao_semanal.sessoes_concluidas} de ${data.adesao_semanal.sessoes_planejadas} sessões`
+                : undefined
+            }
+            icon={Activity}
+            loading={loading}
+            gradientFrom="from-chart-2/60"
+            gradientTo="to-chart-2"
+            tooltip="Taxa de sessões concluídas sobre o total planejado nesta semana"
+          />
         </motion.div>
 
         <motion.div initial="hidden" animate="visible" custom={3} variants={fadeUp}>
-          <Card className="relative overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Ação Rápida
-              </CardTitle>
-              <Dumbbell className="size-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <Button asChild size="sm" className="mt-1">
-                <Link href="/dashboard/alunos">
-                  Gerenciar Alunos
-                  <ArrowRight className="ml-2 size-3.5" />
-                </Link>
-              </Button>
-              <p className="text-xs text-muted-foreground mt-2">
-                convites, listagem e ações
-              </p>
-            </CardContent>
-            <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-chart-3/60 to-chart-3" />
-          </Card>
+          <KpiCard
+            title="Esforço Médio"
+            value={data ? `${data.media_esforco_global}/10` : "—"}
+            subtitle="RPE dos últimos 30 dias"
+            icon={Flame}
+            loading={loading}
+            gradientFrom="from-chart-3/60"
+            gradientTo="to-chart-3"
+            tooltip="Média do esforço percebido (RPE) reportado pelos alunos nos últimos 30 dias"
+          />
+        </motion.div>
+
+        <motion.div initial="hidden" animate="visible" custom={4} variants={fadeUp}>
+          <KpiCard
+            title="Sessões da Semana"
+            value={data?.adesao_semanal.sessoes_concluidas ?? 0}
+            subtitle="concluídas nesta semana"
+            icon={CalendarDays}
+            loading={loading}
+            gradientFrom="from-chart-4/60"
+            gradientTo="to-chart-4"
+          />
         </motion.div>
       </div>
+
+      {/* Ranking de Frequência */}
+      <motion.div initial="hidden" animate="visible" custom={5} variants={fadeUp}>
+        <RankingFrequencia
+          topFrequentes={data?.top_frequentes ?? []}
+          menosFrequentes={data?.menos_frequentes ?? []}
+          loading={loading}
+        />
+      </motion.div>
     </div>
   )
 }
+
+// ── Aluno Dashboard ──
 
 function AlunoDashboard() {
-  const { user, perfilId } = useAuth()
-  const [aluno, setAluno] = useState<AlunoResource | null>(null)
+  const { user } = useAuth()
+  const [data, setData] = useState<AlunoResumo | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchData = useCallback(() => {
+    setLoading(true)
+    setError(null)
+    buscarResumoAluno()
+      .then((res) => setData(res.data))
+      .catch((err) => setError(err.message || "Erro ao carregar dashboard."))
+      .finally(() => setLoading(false))
+  }, [])
 
   useEffect(() => {
-    if (!perfilId) {
-      setLoading(false)
-      return
-    }
-    exibirAlunoRequest(perfilId)
-      .then((res) => setAluno(res.data))
-      .catch(() => setAluno(null))
-      .finally(() => setLoading(false))
-  }, [perfilId])
+    fetchData()
+  }, [fetchData])
+
+  if (error && !loading) {
+    return (
+      <div className="space-y-6">
+        <Header nome={user?.nome} subtitulo="Acompanhe seus dados e seu progresso." />
+        <ChartErrorState message={error} onRetry={fetchData} />
+      </div>
+    )
+  }
+
+  const ultimaSessaoFormatada =
+    data?.ultima_sessao
+      ? format(parseISO(data.ultima_sessao), "dd 'de' MMMM", { locale: ptBR })
+      : "Nenhuma"
 
   return (
     <div className="space-y-6">
-      <motion.div initial="hidden" animate="visible" custom={0} variants={fadeUp}>
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">
-            Olá, {user?.nome.split(" ")[0]}! 👋
-          </h1>
-          <p className="text-muted-foreground">
-            Acompanhe seus dados e seu personal trainer.
-          </p>
-        </div>
-      </motion.div>
+      <Header nome={user?.nome} subtitulo="Acompanhe seus dados e seu progresso." />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {/* KPI Cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <motion.div initial="hidden" animate="visible" custom={1} variants={fadeUp}>
-          <Card className="relative overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Peso Atual
-              </CardTitle>
-              <Weight className="size-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <div className="text-3xl font-bold">
-                  {aluno?.dados_fisicos?.peso
-                    ? `${aluno.dados_fisicos.peso} kg`
-                    : "—"}
-                </div>
-              )}
-              <p className="text-xs text-muted-foreground mt-1">
-                registrado no perfil
-              </p>
-            </CardContent>
-            <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-primary/60 to-primary" />
-          </Card>
+          <KpiCard
+            title="Total de Sessões"
+            value={data?.total_sessoes ?? 0}
+            subtitle="treinos completos"
+            icon={Dumbbell}
+            loading={loading}
+            gradientFrom="from-primary/60"
+            gradientTo="to-primary"
+          />
         </motion.div>
 
         <motion.div initial="hidden" animate="visible" custom={2} variants={fadeUp}>
-          <Card className="relative overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Altura
-              </CardTitle>
-              <Ruler className="size-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <div className="text-3xl font-bold">
-                  {aluno?.dados_fisicos?.altura
-                    ? `${aluno.dados_fisicos.altura} m`
-                    : "—"}
-                </div>
-              )}
-              <p className="text-xs text-muted-foreground mt-1">
-                registrada no perfil
-              </p>
-            </CardContent>
-            <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-chart-2/60 to-chart-2" />
-          </Card>
+          <KpiCard
+            title="Duração Média"
+            value={data ? `${data.media_duracao_minutos} min` : "—"}
+            subtitle="por sessão"
+            icon={Timer}
+            loading={loading}
+            gradientFrom="from-chart-2/60"
+            gradientTo="to-chart-2"
+          />
         </motion.div>
 
         <motion.div initial="hidden" animate="visible" custom={3} variants={fadeUp}>
-          <Card className="relative overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Ação Rápida
-              </CardTitle>
-              <User className="size-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <Button asChild size="sm" className="mt-1">
-                <Link href="/dashboard/meu-personal">
-                  Ver Meu Personal
-                  <ArrowRight className="ml-2 size-3.5" />
-                </Link>
-              </Button>
-              <p className="text-xs text-muted-foreground mt-2">
-                informações do seu treinador
-              </p>
-            </CardContent>
-            <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-chart-3/60 to-chart-3" />
-          </Card>
+          <KpiCard
+            title="Esforço Médio"
+            value={data ? `${data.media_esforco}/10` : "—"}
+            subtitle="RPE autoavaliado"
+            icon={Flame}
+            loading={loading}
+            gradientFrom="from-chart-3/60"
+            gradientTo="to-chart-3"
+            tooltip="Média do seu esforço percebido (RPE) em todas as sessões"
+          />
+        </motion.div>
+
+        <motion.div initial="hidden" animate="visible" custom={4} variants={fadeUp}>
+          <KpiCard
+            title="Sequência Atual"
+            value={data ? `${data.sequencia_dias} dias` : "—"}
+            subtitle={
+              data ? `Melhor: ${data.melhor_sequencia} dias` : undefined
+            }
+            icon={Zap}
+            loading={loading}
+            gradientFrom="from-chart-4/60"
+            gradientTo="to-chart-4"
+            tooltip="Dias consecutivos com pelo menos uma sessão registrada"
+          />
         </motion.div>
       </div>
+
+      {/* Info Card */}
+      <motion.div initial="hidden" animate="visible" custom={5} variants={fadeUp}>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <KpiCard
+            title="Última Sessão"
+            value={ultimaSessaoFormatada}
+            subtitle="data do último treino registrado"
+            icon={CalendarDays}
+            loading={loading}
+            gradientFrom="from-chart-5/60"
+            gradientTo="to-chart-5"
+          />
+          <KpiCard
+            title="Melhor Sequência"
+            value={data ? `${data.melhor_sequencia} dias` : "—"}
+            subtitle="recorde pessoal de consistência"
+            icon={Trophy}
+            loading={loading}
+            gradientFrom="from-primary/60"
+            gradientTo="to-primary"
+          />
+        </div>
+      </motion.div>
     </div>
   )
 }
+
+// ── Shared Components ──
+
+function Header({ nome, subtitulo }: { nome?: string; subtitulo: string }) {
+  return (
+    <motion.div initial="hidden" animate="visible" custom={0} variants={fadeUp}>
+      <div className="space-y-1">
+        <h1 className="text-2xl font-bold tracking-tight">
+          Olá, {nome?.split(" ")[0]}! 👋
+        </h1>
+        <p className="text-muted-foreground">{subtitulo}</p>
+      </div>
+    </motion.div>
+  )
+}
+
+// ── Page Router ──
 
 export default function DashboardPage() {
   const { tipoPerfil } = useAuth()

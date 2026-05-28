@@ -38,6 +38,46 @@
                             "type": "integer",
                             "default": 1
                         }
+                    },
+                    {
+                        "name": "nome",
+                        "in": "query",
+                        "description": "Filtro parcial por nome do aluno",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "email",
+                        "in": "query",
+                        "description": "Filtro parcial por e-mail do aluno",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "telefone",
+                        "in": "query",
+                        "description": "Filtro parcial por telefone do aluno",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filtro por status do vínculo (ex: ativo, inativo)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "ativo",
+                                "inativo"
+                            ]
+                        }
                     }
                 ],
                 "responses": {
@@ -1003,6 +1043,1431 @@
                 }
             }
         },
+        "/dashboard/aluno/resumo": {
+            "get": {
+                "tags": [
+                    "Dashboard - Aluno"
+                ],
+                "summary": "Resumo geral do Aluno",
+                "description": "Retorna as métricas de resumo da própria conta do aluno logado.",
+                "operationId": "7e3702bfcc2951fc8b5c05c41145fdfa",
+                "responses": {
+                    "200": {
+                        "description": "Resumo do dashboard do aluno",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "total_sessoes": {
+                                                    "type": "integer",
+                                                    "example": 45
+                                                },
+                                                "media_duracao_minutos": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 58.5
+                                                },
+                                                "media_esforco": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 7.2
+                                                },
+                                                "ultima_sessao": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2023-10-18"
+                                                },
+                                                "sequencia_dias": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "melhor_sequencia": {
+                                                    "type": "integer",
+                                                    "example": 12
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado"
+                    },
+                    "403": {
+                        "description": "Acesso negado - Utilizador não é um aluno"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/dashboard/aluno/exercicio/{exercicio}/historico": {
+            "get": {
+                "tags": [
+                    "Dashboard - Aluno"
+                ],
+                "summary": "Histórico de um Exercício",
+                "description": "Retorna o histórico de cargas e volume de um exercício específico executado pelo aluno, filtrado por período.",
+                "operationId": "5c1eb73a990fc2d07faa6e2b904b40eb",
+                "parameters": [
+                    {
+                        "name": "exercicio",
+                        "in": "path",
+                        "description": "ID do Exercício",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "period",
+                        "in": "query",
+                        "description": "Período para filtro dos dados",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "30d",
+                            "enum": [
+                                "7d",
+                                "30d",
+                                "3m",
+                                "6m",
+                                "1y",
+                                "all"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Histórico do exercício",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "exercicio": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "nome": {
+                                                            "type": "string",
+                                                            "example": "Agachamento Livre"
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                },
+                                                "periodo": {
+                                                    "type": "string",
+                                                    "example": "30d"
+                                                },
+                                                "historico": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "data": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2023-10-18"
+                                                            },
+                                                            "series": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "numero_serie": {
+                                                                            "type": "integer",
+                                                                            "example": 1
+                                                                        },
+                                                                        "repeticoes": {
+                                                                            "type": "integer",
+                                                                            "example": 12
+                                                                        },
+                                                                        "carga": {
+                                                                            "type": "number",
+                                                                            "format": "float",
+                                                                            "example": 40
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            },
+                                                            "carga_maxima": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 45
+                                                            },
+                                                            "volume_sessao": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 1500
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado"
+                    },
+                    "403": {
+                        "description": "Acesso negado - Utilizador não é um aluno"
+                    },
+                    "404": {
+                        "description": "Exercício não encontrado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/dashboard/personal/resumo": {
+            "get": {
+                "tags": [
+                    "Dashboard - Personal"
+                ],
+                "summary": "Resumo geral do Personal Trainer",
+                "description": "Retorna estatísticas gerais dos alunos ativos do personal trainer logado.",
+                "operationId": "007457d64222466e981719206b092bab",
+                "responses": {
+                    "200": {
+                        "description": "Resumo do dashboard",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "total_alunos_ativos": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "adesao_semanal": {
+                                                    "properties": {
+                                                        "sessoes_planejadas": {
+                                                            "type": "integer",
+                                                            "example": 25
+                                                        },
+                                                        "sessoes_concluidas": {
+                                                            "type": "integer",
+                                                            "example": 20
+                                                        },
+                                                        "taxa_percentual": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 80
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "media_esforco_global": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 7.5
+                                                },
+                                                "top_frequentes": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "aluno_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "nome": {
+                                                                "type": "string",
+                                                                "example": "João Silva"
+                                                            },
+                                                            "sessoes": {
+                                                                "type": "integer",
+                                                                "example": 12
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "menos_frequentes": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "aluno_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "nome": {
+                                                                "type": "string",
+                                                                "example": "Maria Souza"
+                                                            },
+                                                            "sessoes": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado"
+                    },
+                    "403": {
+                        "description": "Acesso negado - Utilizador não é um personal trainer"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/dashboard/personal/aluno/{aluno}/progresso": {
+            "get": {
+                "tags": [
+                    "Dashboard - Personal"
+                ],
+                "summary": "Progresso de um Aluno específico",
+                "description": "Retorna as métricas de progresso e volume de carga de um aluno, filtradas por período.",
+                "operationId": "d01dc8c57ae3d5e5551a20c8cdc8d082",
+                "parameters": [
+                    {
+                        "name": "aluno",
+                        "in": "path",
+                        "description": "ID do Aluno",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "period",
+                        "in": "query",
+                        "description": "Período para filtro dos dados",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "30d",
+                            "enum": [
+                                "7d",
+                                "30d",
+                                "3m",
+                                "6m",
+                                "1y",
+                                "all"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Progresso do aluno",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "periodo": {
+                                                    "type": "string",
+                                                    "example": "30d"
+                                                },
+                                                "volume_load_semanal": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "semana": {
+                                                                "type": "string",
+                                                                "example": "2023-W42"
+                                                            },
+                                                            "inicio_semana": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2023-10-16"
+                                                            },
+                                                            "volume_load": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 12500.5
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "carga_maxima_por_exercicio": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "exercicio_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "exercicio_nome": {
+                                                                "type": "string",
+                                                                "example": "Supino Reto"
+                                                            },
+                                                            "evolucao": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "semana": {
+                                                                            "type": "string",
+                                                                            "example": "2023-W42"
+                                                                        },
+                                                                        "carga_maxima": {
+                                                                            "type": "number",
+                                                                            "format": "float",
+                                                                            "example": 80
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "esforco_por_sessao": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "data": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2023-10-16"
+                                                            },
+                                                            "esforco_percebido": {
+                                                                "type": "integer",
+                                                                "example": 8
+                                                            },
+                                                            "duracao_minutos": {
+                                                                "type": "integer",
+                                                                "example": 60
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "frequencia_semanal": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "semana": {
+                                                                "type": "string",
+                                                                "example": "2023-W42"
+                                                            },
+                                                            "sessoes": {
+                                                                "type": "integer",
+                                                                "example": 4
+                                                            },
+                                                            "duracao_media": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 55.5
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado"
+                    },
+                    "403": {
+                        "description": "Acesso negado - Utilizador não é um personal trainer ou aluno não vinculado"
+                    },
+                    "404": {
+                        "description": "Aluno não encontrado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/exercicio": {
+            "get": {
+                "tags": [
+                    "Exercícios"
+                ],
+                "summary": "Listar exercícios",
+                "description": "Retorna uma lista paginada de exercícios visíveis pelo Personal Trainer autenticado (exercícios próprios + exercícios globais da plataforma). Suporta filtros combináveis por nome, tipo, grupo muscular e origem. Requer autenticação e e-mail verificado.",
+                "operationId": "listarExercicios",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Número da página",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "nome",
+                        "in": "query",
+                        "description": "Busca parcial por nome do exercício (case-insensitive)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "agachamento"
+                        }
+                    },
+                    {
+                        "name": "tipo",
+                        "in": "query",
+                        "description": "Filtro por tipo de exercício",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "superior",
+                                "inferior",
+                                "core",
+                                "cardio",
+                                "full_body"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "grupo_muscular",
+                        "in": "query",
+                        "description": "Filtro por grupo muscular",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "peitoral",
+                                "costas",
+                                "ombros",
+                                "biceps",
+                                "triceps",
+                                "quadriceps",
+                                "posterior_coxa",
+                                "gluteos",
+                                "panturrilhas",
+                                "abdomen",
+                                "outro"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "is_global",
+                        "in": "query",
+                        "description": "Filtro por origem: true = globais, false = do personal",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "true",
+                                "false"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de exercícios retornada com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ExercicioResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "$ref": "#/components/schemas/PaginacaoLinks"
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PaginacaoMeta"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutenticado"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "E-mail não verificado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutorizado"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Exercícios"
+                ],
+                "summary": "Criar exercício",
+                "description": "Cria um novo exercício vinculado ao Personal Trainer autenticado. Requer autenticação e e-mail verificado.",
+                "operationId": "criarExercicio",
+                "requestBody": {
+                    "description": "Dados do exercício a ser criado",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nome",
+                                    "tipo",
+                                    "grupo_muscular"
+                                ],
+                                "properties": {
+                                    "nome": {
+                                        "type": "string",
+                                        "example": "Supino Reto com Barra",
+                                        "maxLength": 255
+                                    },
+                                    "tipo": {
+                                        "type": "string",
+                                        "example": "superior",
+                                        "enum": [
+                                            "superior",
+                                            "inferior",
+                                            "core",
+                                            "cardio",
+                                            "full_body"
+                                        ]
+                                    },
+                                    "grupo_muscular": {
+                                        "type": "string",
+                                        "example": "peitoral",
+                                        "enum": [
+                                            "peitoral",
+                                            "costas",
+                                            "ombros",
+                                            "biceps",
+                                            "triceps",
+                                            "quadriceps",
+                                            "posterior_coxa",
+                                            "gluteos",
+                                            "panturrilhas",
+                                            "abdomen",
+                                            "outro"
+                                        ]
+                                    },
+                                    "video_url": {
+                                        "type": "string",
+                                        "example": "https://www.youtube.com/watch?v=exemplo",
+                                        "nullable": true,
+                                        "maxLength": 2048
+                                    },
+                                    "instrucoes": {
+                                        "type": "string",
+                                        "example": "Mantenha as escápulas retraídas.",
+                                        "nullable": true,
+                                        "maxLength": 5000
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Exercício criado com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "Exercício criado com sucesso."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/ExercicioResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutenticado"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Não autorizado (não é Personal)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutorizado"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erro de validação",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroValidacao"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/exercicio/{exercicio}": {
+            "get": {
+                "tags": [
+                    "Exercícios"
+                ],
+                "summary": "Exibir um exercício específico",
+                "description": "Retorna os dados detalhados de um exercício pelo seu ID. Requer autenticação e e-mail verificado.",
+                "operationId": "exibirExercicio",
+                "parameters": [
+                    {
+                        "name": "exercicio",
+                        "in": "path",
+                        "description": "ID do exercício",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dados do exercício retornados com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ExercicioResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutenticado"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Exercício não encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoEncontrado"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Exercícios"
+                ],
+                "summary": "Atualizar exercício",
+                "description": "Atualiza um exercício do Personal Trainer autenticado. Não é possível editar exercícios globais. Requer autenticação e e-mail verificado.",
+                "operationId": "atualizarExercicio",
+                "parameters": [
+                    {
+                        "name": "exercicio",
+                        "in": "path",
+                        "description": "ID do exercício",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Campos a serem atualizados (todos opcionais)",
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "nome": {
+                                        "type": "string",
+                                        "example": "Supino Inclinado com Halter",
+                                        "maxLength": 255
+                                    },
+                                    "tipo": {
+                                        "type": "string",
+                                        "example": "superior",
+                                        "enum": [
+                                            "superior",
+                                            "inferior",
+                                            "core",
+                                            "cardio",
+                                            "full_body"
+                                        ]
+                                    },
+                                    "grupo_muscular": {
+                                        "type": "string",
+                                        "example": "peitoral",
+                                        "enum": [
+                                            "peitoral",
+                                            "costas",
+                                            "ombros",
+                                            "biceps",
+                                            "triceps",
+                                            "quadriceps",
+                                            "posterior_coxa",
+                                            "gluteos",
+                                            "panturrilhas",
+                                            "abdomen",
+                                            "outro"
+                                        ]
+                                    },
+                                    "video_url": {
+                                        "type": "string",
+                                        "example": "https://www.youtube.com/watch?v=novo-video",
+                                        "nullable": true
+                                    },
+                                    "instrucoes": {
+                                        "type": "string",
+                                        "example": "Instruções atualizadas.",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Exercício atualizado com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "Exercício atualizado com sucesso."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/ExercicioResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutenticado"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Sem permissão (exercício global ou de outro personal)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutorizado"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Exercício não encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoEncontrado"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erro de validação",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroValidacao"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Exercícios"
+                ],
+                "summary": "Excluir exercício",
+                "description": "Exclui (soft delete) um exercício do Personal Trainer autenticado. Não é possível excluir exercícios globais. Requer autenticação e e-mail verificado.",
+                "operationId": "excluirExercicio",
+                "parameters": [
+                    {
+                        "name": "exercicio",
+                        "in": "path",
+                        "description": "ID do exercício",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Exercício excluído com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "Exercício excluído com sucesso."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutenticado"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Sem permissão",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutorizado"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Exercício não encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoEncontrado"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/ficha-treino": {
+            "get": {
+                "tags": [
+                    "Treinos"
+                ],
+                "summary": "Listar fichas de treino",
+                "description": "Retorna uma lista paginada das fichas de treino criadas pelo Personal Trainer autenticado, incluindo os dados do aluno vinculado. Requer autenticação e e-mail verificado.",
+                "operationId": "listarFichasTreino",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Número da página",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de fichas de treino retornada com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/FichaTreinoResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "$ref": "#/components/schemas/PaginacaoLinks"
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PaginacaoMeta"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutenticado"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "E-mail não verificado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutorizado"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Treinos"
+                ],
+                "summary": "Criar ficha de treino completa",
+                "description": "Cria uma ficha de treino completa de forma atômica (transacional). O payload inclui a ficha principal, um array de semanas (periodização) e um array de rotinas, cada uma contendo seus exercícios com parâmetros detalhados. O aluno informado deve estar vinculado (status ativo) ao Personal autenticado. Requer autenticação e e-mail verificado.",
+                "operationId": "criarFichaTreino",
+                "requestBody": {
+                    "description": "Payload completo da ficha de treino com semanas, rotinas e exercícios",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ArmazenarFichaTreinoBody"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Ficha de treino criada com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "Ficha de treino criada com sucesso."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/FichaTreinoResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutenticado"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Não autorizado (não é Personal)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutorizado"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erro de validação",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroValidacao"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno ao salvar",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "Erro interno ao salvar a ficha de treino. Tente novamente."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/ficha-treino/{ficha_treino}": {
+            "get": {
+                "tags": [
+                    "Treinos"
+                ],
+                "summary": "Exibir ficha de treino completa",
+                "description": "Retorna os dados completos de uma ficha de treino, incluindo aluno, semanas de periodização, rotinas (sessões A, B, C...) e os exercícios de cada rotina com seus parâmetros. Requer autenticação e e-mail verificado.",
+                "operationId": "exibirFichaTreino",
+                "parameters": [
+                    {
+                        "name": "ficha_treino",
+                        "in": "path",
+                        "description": "ID da ficha de treino",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dados da ficha de treino retornados com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/FichaTreinoResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutenticado"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Ficha de treino não encontrada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoEncontrado"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Treinos"
+                ],
+                "summary": "Atualizar ficha de treino",
+                "description": "Atualiza uma ficha de treino completa de forma atômica. Utiliza upsert inteligente para rotinas e exercícios, preservando IDs referenciados pelo histórico do aluno (LogSessao/LogSerie). Semanas são recriadas por não possuírem referências externas.",
+                "operationId": "atualizarFichaTreino",
+                "parameters": [
+                    {
+                        "name": "ficha_treino",
+                        "in": "path",
+                        "description": "ID da ficha de treino",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Payload completo da ficha de treino com semanas, rotinas e exercícios (IDs existentes são atualizados, novos são criados)",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ArmazenarFichaTreinoBody"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Ficha de treino atualizada com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "Ficha de treino atualizada com sucesso."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/FichaTreinoResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutenticado"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Não autorizado (não é Personal)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutorizado"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Ficha de treino não encontrada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoEncontrado"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erro de validação",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroValidacao"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno ao atualizar",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "Erro interno ao atualizar a ficha de treino. Tente novamente."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Treinos"
+                ],
+                "summary": "Excluir ficha de treino",
+                "description": "Exclui (soft delete) uma ficha de treino. Requer autenticação e e-mail verificado.",
+                "operationId": "excluirFichaTreino",
+                "parameters": [
+                    {
+                        "name": "ficha_treino",
+                        "in": "path",
+                        "description": "ID da ficha de treino",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ficha de treino excluída com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "Ficha de treino excluída com sucesso."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutenticado"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Ficha de treino não encontrada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoEncontrado"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/personal": {
             "get": {
                 "tags": [
@@ -1407,6 +2872,167 @@
                 ]
             }
         },
+        "/registro-treino/meu-treino": {
+            "get": {
+                "tags": [
+                    "App Aluno - Execução"
+                ],
+                "summary": "Obter meu treino atual",
+                "description": "Retorna a ficha de treino ativa do aluno autenticado (onde a data atual está entre data_inicio e data_vencimento). Caso não exista uma ficha no intervalo válido, retorna a mais recente. Inclui semanas de periodização, rotinas e exercícios detalhados via Eager Loading. Requer autenticação via Sanctum (token de aluno) e e-mail verificado.",
+                "operationId": "meuTreinoAtual",
+                "responses": {
+                    "200": {
+                        "description": "Ficha de treino ativa retornada com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/FichaTreinoResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Nenhuma ficha de treino encontrada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "Nenhuma ficha de treino encontrada."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutenticado"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "E-mail não verificado ou não é aluno",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutorizado"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/registro-treino/registrar-sessao": {
+            "post": {
+                "tags": [
+                    "App Aluno - Execução"
+                ],
+                "summary": "Registar sessão de treino concluída",
+                "description": "Regista a conclusão de uma sessão de treino pelo aluno autenticado. O payload inclui a rotina realizada (A, B, C...), a data de execução, o esforço percebido (PSE 1-10), a duração em minutos e um array de séries com repetições e cargas realizadas. A criação é atômica (transacional). A rotina informada deve pertencer a uma ficha de treino do aluno autenticado (validação de segurança). Requer autenticação via Sanctum (token de aluno) e e-mail verificado.",
+                "operationId": "registrarSessao",
+                "requestBody": {
+                    "description": "Payload com dados da sessão e séries realizadas",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RegistrarSessaoBody"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Sessão de treino registada com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "Sessão de treino registada com sucesso."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/LogSessaoResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Não autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutenticado"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Não autorizado (não é aluno ou rotina não pertence ao aluno)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroNaoAutorizado"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erro de validação",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErroValidacao"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno ao registar",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "mensagem": {
+                                            "type": "string",
+                                            "example": "Erro interno ao registar a sessão de treino. Tente novamente."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/email/verificar/{id}/{hash}": {
             "get": {
                 "tags": [
@@ -1783,6 +3409,582 @@
                     }
                 },
                 "type": "object"
+            },
+            "ExercicioResource": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "nome": {
+                        "type": "string",
+                        "example": "Supino Reto com Barra"
+                    },
+                    "tipo": {
+                        "type": "string",
+                        "example": "superior",
+                        "enum": [
+                            "superior",
+                            "inferior",
+                            "core",
+                            "cardio",
+                            "full_body"
+                        ]
+                    },
+                    "grupo_muscular": {
+                        "type": "string",
+                        "example": "peitoral",
+                        "enum": [
+                            "peitoral",
+                            "costas",
+                            "ombros",
+                            "biceps",
+                            "triceps",
+                            "quadriceps",
+                            "posterior_coxa",
+                            "gluteos",
+                            "panturrilhas",
+                            "abdomen",
+                            "outro"
+                        ]
+                    },
+                    "video_url": {
+                        "type": "string",
+                        "example": "https://www.youtube.com/watch?v=exemplo",
+                        "nullable": true
+                    },
+                    "instrucoes": {
+                        "type": "string",
+                        "example": "Mantenha as escápulas retraídas durante todo o movimento.",
+                        "nullable": true
+                    },
+                    "is_global": {
+                        "description": "true se for um exercício da base global (personal_id = null)",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "cadastrado_em": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-05-01 10:00:00"
+                    }
+                },
+                "type": "object"
+            },
+            "FichaSemanaResource": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "numero_semana": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "descricao_fase": {
+                        "type": "string",
+                        "example": "Adaptação Inicial"
+                    },
+                    "repeticoes_alvo": {
+                        "type": "string",
+                        "example": "12-15"
+                    },
+                    "rir_alvo": {
+                        "type": "integer",
+                        "example": 2,
+                        "nullable": true
+                    },
+                    "intensidade_carga": {
+                        "type": "string",
+                        "example": "Leve a Moderada",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "RotinaExercicioResource": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "ordem": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "tipo_serie": {
+                        "type": "string",
+                        "example": "trabalho",
+                        "enum": [
+                            "aquecimento",
+                            "preparacao",
+                            "trabalho",
+                            "mista"
+                        ]
+                    },
+                    "series": {
+                        "type": "integer",
+                        "example": 4
+                    },
+                    "repeticoes": {
+                        "type": "string",
+                        "example": "12",
+                        "nullable": true
+                    },
+                    "rir": {
+                        "type": "integer",
+                        "example": 2,
+                        "nullable": true
+                    },
+                    "carga_sugerida": {
+                        "type": "string",
+                        "example": "20kg cada lado",
+                        "nullable": true
+                    },
+                    "tecnica_avancada": {
+                        "type": "string",
+                        "example": "nenhuma",
+                        "nullable": true,
+                        "enum": [
+                            "nenhuma",
+                            "drop-set",
+                            "bi-set",
+                            "rest-pause",
+                            "cluster",
+                            "ponto_zero"
+                        ]
+                    },
+                    "descanso_segundos": {
+                        "type": "integer",
+                        "example": 90,
+                        "nullable": true
+                    },
+                    "observacoes": {
+                        "type": "string",
+                        "example": "Pausa de 1 segundo na fase excêntrica",
+                        "nullable": true
+                    },
+                    "exercicio": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/ExercicioResource"
+                            }
+                        ],
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "RotinaSessaoResource": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "letra_nome": {
+                        "type": "string",
+                        "example": "A"
+                    },
+                    "exercicios": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/RotinaExercicioResource"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "FichaTreinoResource": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "aluno_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "nome": {
+                        "type": "string",
+                        "example": "Hipertrofia Fase 1"
+                    },
+                    "objetivo": {
+                        "type": "string",
+                        "example": "Aumento de massa muscular",
+                        "nullable": true
+                    },
+                    "observacoes_gerais": {
+                        "type": "string",
+                        "example": "Foco na fase excêntrica",
+                        "nullable": true
+                    },
+                    "data_inicio": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-05-01"
+                    },
+                    "data_vencimento": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-06-01",
+                        "nullable": true
+                    },
+                    "aluno": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/AlunoResource"
+                            }
+                        ],
+                        "nullable": true
+                    },
+                    "semanas": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/FichaSemanaResource"
+                        }
+                    },
+                    "rotinas": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/RotinaSessaoResource"
+                        }
+                    },
+                    "cadastrado_em": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-05-01 10:00:00"
+                    },
+                    "atualizado_em": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-05-01 10:00:00"
+                    }
+                },
+                "type": "object"
+            },
+            "ArmazenarFichaTreinoBody": {
+                "required": [
+                    "aluno_id",
+                    "nome",
+                    "data_inicio",
+                    "semanas",
+                    "rotinas"
+                ],
+                "properties": {
+                    "aluno_id": {
+                        "description": "ID do aluno vinculado ao personal autenticado",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "nome": {
+                        "type": "string",
+                        "example": "Hipertrofia Fase 1"
+                    },
+                    "objetivo": {
+                        "type": "string",
+                        "example": "Aumento de massa muscular",
+                        "nullable": true
+                    },
+                    "observacoes_gerais": {
+                        "type": "string",
+                        "example": "Foco na fase excêntrica",
+                        "nullable": true
+                    },
+                    "data_inicio": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-05-01"
+                    },
+                    "data_vencimento": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-06-01",
+                        "nullable": true
+                    },
+                    "semanas": {
+                        "type": "array",
+                        "items": {
+                            "required": [
+                                "numero_semana",
+                                "descricao_fase",
+                                "repeticoes_alvo"
+                            ],
+                            "properties": {
+                                "numero_semana": {
+                                    "type": "integer",
+                                    "example": 1
+                                },
+                                "descricao_fase": {
+                                    "type": "string",
+                                    "example": "Adaptação Inicial"
+                                },
+                                "repeticoes_alvo": {
+                                    "type": "string",
+                                    "example": "12-15"
+                                },
+                                "rir_alvo": {
+                                    "type": "integer",
+                                    "example": 2,
+                                    "nullable": true
+                                },
+                                "intensidade_carga": {
+                                    "type": "string",
+                                    "example": "Leve a Moderada",
+                                    "nullable": true
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "rotinas": {
+                        "type": "array",
+                        "items": {
+                            "required": [
+                                "letra_nome",
+                                "exercicios"
+                            ],
+                            "properties": {
+                                "letra_nome": {
+                                    "type": "string",
+                                    "example": "A"
+                                },
+                                "exercicios": {
+                                    "type": "array",
+                                    "items": {
+                                        "required": [
+                                            "exercicio_id",
+                                            "ordem",
+                                            "tipo_serie",
+                                            "series"
+                                        ],
+                                        "properties": {
+                                            "exercicio_id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "ordem": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "tipo_serie": {
+                                                "type": "string",
+                                                "example": "trabalho",
+                                                "enum": [
+                                                    "aquecimento",
+                                                    "preparacao",
+                                                    "trabalho",
+                                                    "mista"
+                                                ]
+                                            },
+                                            "series": {
+                                                "type": "integer",
+                                                "example": 4
+                                            },
+                                            "repeticoes": {
+                                                "type": "string",
+                                                "example": "12",
+                                                "nullable": true
+                                            },
+                                            "rir": {
+                                                "type": "integer",
+                                                "example": 2,
+                                                "nullable": true
+                                            },
+                                            "carga_sugerida": {
+                                                "type": "string",
+                                                "example": "20kg cada lado",
+                                                "nullable": true
+                                            },
+                                            "tecnica_avancada": {
+                                                "type": "string",
+                                                "example": "nenhuma",
+                                                "nullable": true,
+                                                "enum": [
+                                                    "nenhuma",
+                                                    "drop-set",
+                                                    "bi-set",
+                                                    "rest-pause",
+                                                    "cluster",
+                                                    "ponto_zero"
+                                                ]
+                                            },
+                                            "descanso_segundos": {
+                                                "type": "integer",
+                                                "example": 90,
+                                                "nullable": true
+                                            },
+                                            "observacoes": {
+                                                "type": "string",
+                                                "example": "Pausa de 1 segundo",
+                                                "nullable": true
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "LogSerieResource": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "rotina_exercicio_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "numero_serie": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "repeticoes_realizadas": {
+                        "type": "integer",
+                        "example": 12
+                    },
+                    "carga_realizada": {
+                        "type": "string",
+                        "example": "20kg"
+                    },
+                    "exercicio": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/RotinaExercicioResource"
+                            }
+                        ],
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "LogSessaoResource": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "aluno_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "rotina_sessao": {
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 1
+                            },
+                            "letra_nome": {
+                                "type": "string",
+                                "example": "A"
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "data_execucao": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-04-24"
+                    },
+                    "esforco_percebido": {
+                        "type": "integer",
+                        "example": 7
+                    },
+                    "duracao_minutos": {
+                        "type": "integer",
+                        "example": 55
+                    },
+                    "observacoes_aluno": {
+                        "type": "string",
+                        "example": "Treino pesado hoje",
+                        "nullable": true
+                    },
+                    "series": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/LogSerieResource"
+                        }
+                    },
+                    "registado_em": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-04-24 15:00:00"
+                    }
+                },
+                "type": "object"
+            },
+            "RegistrarSessaoBody": {
+                "required": [
+                    "rotina_sessao_id",
+                    "data_execucao",
+                    "esforco_percebido",
+                    "duracao_minutos",
+                    "series"
+                ],
+                "properties": {
+                    "rotina_sessao_id": {
+                        "description": "ID da rotina (A, B, C...) que o aluno realizou",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "data_execucao": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-04-24"
+                    },
+                    "esforco_percebido": {
+                        "description": "Percepção Subjetiva de Esforço (PSE), de 1 a 10",
+                        "type": "integer",
+                        "example": 7
+                    },
+                    "duracao_minutos": {
+                        "description": "Duração total da sessão em minutos",
+                        "type": "integer",
+                        "example": 55
+                    },
+                    "observacoes_aluno": {
+                        "type": "string",
+                        "example": "Treino pesado hoje",
+                        "nullable": true
+                    },
+                    "series": {
+                        "type": "array",
+                        "items": {
+                            "required": [
+                                "rotina_exercicio_id",
+                                "numero_serie",
+                                "repeticoes_realizadas",
+                                "carga_realizada"
+                            ],
+                            "properties": {
+                                "rotina_exercicio_id": {
+                                    "description": "ID do exercício da rotina (prescrição original)",
+                                    "type": "integer",
+                                    "example": 1
+                                },
+                                "numero_serie": {
+                                    "type": "integer",
+                                    "example": 1
+                                },
+                                "repeticoes_realizadas": {
+                                    "type": "integer",
+                                    "example": 12
+                                },
+                                "carga_realizada": {
+                                    "type": "string",
+                                    "example": "20kg cada lado"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "type": "object"
             }
         },
         "securitySchemes": {
@@ -1814,6 +4016,26 @@
         {
             "name": "Convites",
             "description": "Sistema de convites para vincular alunos a personais"
+        },
+        {
+            "name": "Exercícios",
+            "description": "CRUD de Exercícios do Personal Trainer (requer e-mail verificado)"
+        },
+        {
+            "name": "Treinos",
+            "description": "Gestão de Fichas de Treino, semanas e rotinas (requer e-mail verificado)"
+        },
+        {
+            "name": "App Aluno - Execução",
+            "description": "Visualização do treino atual e registo de sessões de treino pelo aluno (requer e-mail verificado)"
+        },
+        {
+            "name": "Dashboard - Aluno",
+            "description": "Dashboard - Aluno"
+        },
+        {
+            "name": "Dashboard - Personal",
+            "description": "Dashboard - Personal"
         }
     ]
 }
