@@ -21,12 +21,12 @@ services:
       - APP_URL=${APP_URL}
       - APP_FRONTEND_URL=${APP_FRONTEND_URL}
       - DB_CONNECTION=${DB_CONNECTION}
-      - DB_HOST=${DB_HOST}
+      - DB_HOST=gogym_db
       - DB_PORT=${DB_PORT}
       - DB_DATABASE=${DB_DATABASE}
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
-      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_HOST=gogym_redis
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_PORT=${REDIS_PORT}
       - QUEUE_CONNECTION=${QUEUE_CONNECTION}
@@ -54,12 +54,12 @@ services:
       - APP_DEBUG=${APP_DEBUG}
       - APP_URL=${APP_URL}
       - DB_CONNECTION=${DB_CONNECTION}
-      - DB_HOST=${DB_HOST}
+      - DB_HOST=gogym_db
       - DB_PORT=${DB_PORT}
       - DB_DATABASE=${DB_DATABASE}
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
-      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_HOST=gogym_redis
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_PORT=${REDIS_PORT}
       - QUEUE_CONNECTION=${QUEUE_CONNECTION}
@@ -88,7 +88,9 @@ services:
       timeout: 20s
       retries: 10
     networks:
-      - gogym_network
+      gogym_network:
+        aliases:
+          - gogym_db
 
   redis:
     image: redis:alpine
@@ -99,7 +101,9 @@ services:
     volumes:
       - gogym_redis_data:/data
     networks:
-      - gogym_network
+      gogym_network:
+        aliases:
+          - gogym_redis
 
 networks:
   gogym_network:
