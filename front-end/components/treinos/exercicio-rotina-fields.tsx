@@ -58,12 +58,33 @@ import { Check, ChevronsUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 import type { Exercicio } from "@/lib/services/treinos"
-import type { FichaFormValues } from "@/app/dashboard/treinos/criar/page"
+
+// Tipo base que descreve a estrutura mínima exigida pelo componente.
+// Funciona tanto com FichaFormValues (personal) quanto FichaFormValuesAluno (aluno).
+interface FichaFormBase {
+  rotinas: {
+    letra_nome: string
+    exercicios: {
+      exercicio_id: number
+      exercicio_nome?: string
+      ordem: number
+      tipo_serie: string
+      series: number
+      repeticoes?: string
+      rir?: number
+      carga_sugerida?: string
+      tecnica_avancada?: string
+      descanso_segundos?: number
+      observacoes?: string
+    }[]
+  }[]
+  [key: string]: unknown
+}
 
 interface ExercicioRotinaFieldsProps {
   rotinaIndex: number
-  control: Control<FichaFormValues>
-  register: UseFormRegister<FichaFormValues>
+  control: Control<FichaFormBase>
+  register: UseFormRegister<FichaFormBase>
 }
 
 const TIPOS_SERIE = [
