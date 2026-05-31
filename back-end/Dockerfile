@@ -1,4 +1,4 @@
-FROM php:8.4-cli
+FROM dunglas/frankenphp:latest-php8.4
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -15,18 +15,41 @@ RUN apt-get update && apt-get install -y \
     dos2unix \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+RUN install-php-extensions \
+    pdo_mysql \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    gd \
+    zip \
+    redis \
+    opcache
 
-RUN pecl install redis && docker-php-ext-enable redis
+RUN echo "memory_limit=512M" > /usr/local/etc/php/conf.d/memory.ini \
+    && echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/opcache.ini \
+    && echo "opcache.memory_consumption=256" >> /usr/local/etc/php/conf.d/opcache.ini \
+    && echo "opcache.max_accelerated_files=20000" >> /usr/local/etc/php/conf.d/opcache.ini \
+    && echo "opcache.validate_timestamps=0" >> /usr/local/etc/php/conf.d/opcache.ini
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Copia o código
+COPY composer.json composer.lock ./
+RUN composer install \
+    --no-dev \
+    --no-scripts \
+    --no-autoloader \
+    --prefer-dist \
+    --no-interaction
+
 COPY . .
 
-# Instala dependências já no build — resolve o problema do queue e acelera o startup
-RUN composer install --no-interaction --no-dev --optimize-autoloader
+RUN composer dump-autoload --optimize --no-dev
 
-RUN chown -R www-data:www-data /var/www/html
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+
+COPY Caddyfile /etc/caddy/Caddyfile
+
+EXPOSE 8000

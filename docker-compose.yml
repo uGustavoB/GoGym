@@ -13,6 +13,8 @@ services:
       - "traefik.http.routers.gogym-app.tls=true"
       - "traefik.http.services.gogym-app.loadbalancer.server.port=8000"
     environment:
+      - SERVER_NAME=:8000
+      - FRANKENPHP_CONFIG=worker ./public/index.php
       - NIXPACKS_NODE_VERSION=${NIXPACKS_NODE_VERSION}
       - APP_NAME=${APP_NAME}
       - APP_ENV=${APP_ENV}
@@ -30,6 +32,13 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_PORT=${REDIS_PORT}
       - QUEUE_CONNECTION=${QUEUE_CONNECTION}
+      - MAIL_MAILER=${MAIL_MAILER}
+      - MAIL_HOST=${MAIL_HOST}
+      - MAIL_PORT=${MAIL_PORT}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS}
+      - MAIL_FROM_NAME=${MAIL_FROM_NAME}
     depends_on:
       db:
         condition: service_healthy
@@ -37,7 +46,10 @@ services:
         condition: service_started
     command: >
       bash -c "php artisan migrate --force &&
-               php artisan serve --host=0.0.0.0 --port=8000"
+               php artisan config:cache &&
+               php artisan route:cache &&
+               php artisan event:cache &&
+               frankenphp run --config /etc/caddy/Caddyfile"
     networks:
       - gogym_network
       - coolify
@@ -63,10 +75,19 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_PORT=${REDIS_PORT}
       - QUEUE_CONNECTION=${QUEUE_CONNECTION}
+      - MAIL_MAILER=${MAIL_MAILER}
+      - MAIL_HOST=${MAIL_HOST}
+      - MAIL_PORT=${MAIL_PORT}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS}
+      - MAIL_FROM_NAME=${MAIL_FROM_NAME}
     depends_on:
       db:
         condition: service_healthy
       redis:
+        condition: service_started
+      app:
         condition: service_started
     command: php artisan queue:work redis --tries=3 --timeout=90
     networks:
