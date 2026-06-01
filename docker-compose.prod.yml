@@ -1,0 +1,137 @@
+services:
+  app:
+    build:
+      context: ./back-end
+      dockerfile: Dockerfile
+    container_name: gogym_app
+    ports:
+      - "8008:8000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.gogym-app.rule=Host(`api.gogym.ugustavodev.com.br`)"
+      - "traefik.http.routers.gogym-app.entrypoints=websecure"
+      - "traefik.http.routers.gogym-app.tls=true"
+      - "traefik.http.services.gogym-app.loadbalancer.server.port=8000"
+    environment:
+      - SERVER_NAME=:8000
+      - FRANKENPHP_CONFIG=worker ./public/index.php
+      - NIXPACKS_NODE_VERSION=${NIXPACKS_NODE_VERSION}
+      - APP_NAME=${APP_NAME}
+      - APP_ENV=${APP_ENV}
+      - APP_KEY=${APP_KEY}
+      - APP_DEBUG=${APP_DEBUG}
+      - APP_URL=${APP_URL}
+      - APP_FRONTEND_URL=${APP_FRONTEND_URL}
+      - DB_CONNECTION=${DB_CONNECTION}
+      - DB_HOST=gogym_db
+      - DB_PORT=${DB_PORT}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=gogym_redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_PORT=${REDIS_PORT}
+      - QUEUE_CONNECTION=${QUEUE_CONNECTION}
+      - MAIL_MAILER=${MAIL_MAILER}
+      - MAIL_HOST=${MAIL_HOST}
+      - MAIL_PORT=${MAIL_PORT}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS}
+      - MAIL_FROM_NAME=${MAIL_FROM_NAME}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    command: >
+      bash -c "php artisan migrate --force &&
+               php artisan config:cache &&
+               php artisan route:cache &&
+               php artisan event:cache &&
+               frankenphp run --config /etc/caddy/Caddyfile"
+    networks:
+      - gogym_network
+      - coolify
+
+  queue:
+    build:
+      context: ./back-end
+      dockerfile: Dockerfile
+    container_name: gogym_queue
+    environment:
+      - APP_NAME=${APP_NAME}
+      - APP_ENV=${APP_ENV}
+      - APP_KEY=${APP_KEY}
+      - APP_DEBUG=${APP_DEBUG}
+      - APP_URL=${APP_URL}
+      - DB_CONNECTION=${DB_CONNECTION}
+      - DB_HOST=gogym_db
+      - DB_PORT=${DB_PORT}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=gogym_redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_PORT=${REDIS_PORT}
+      - QUEUE_CONNECTION=${QUEUE_CONNECTION}
+      - MAIL_MAILER=${MAIL_MAILER}
+      - MAIL_HOST=${MAIL_HOST}
+      - MAIL_PORT=${MAIL_PORT}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS}
+      - MAIL_FROM_NAME=${MAIL_FROM_NAME}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      app:
+        condition: service_started
+    command: php artisan queue:work redis --tries=3 --timeout=90
+    networks:
+      - gogym_network
+
+  db:
+    image: mysql:8.0
+    container_name: gogym_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+    ports:
+      - "3384:3306"
+    volumes:
+      - gogym_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    networks:
+      gogym_network:
+        aliases:
+          - gogym_db
+
+  redis:
+    image: redis:alpine
+    container_name: gogym_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - gogym_redis_data:/data
+    networks:
+      gogym_network:
+        aliases:
+          - gogym_redis
+
+networks:
+  gogym_network:
+    driver: bridge
+  coolify:
+    external: true
+
+volumes:
+  gogym_mysql_data:
+  gogym_redis_data:
