@@ -3,15 +3,14 @@ services:
     build:
       context: ./back-end
       dockerfile: Dockerfile
-    container_name: gogym_app
     ports:
       - "8008:8000"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.gogym-app.rule=Host(`api.gogym.ugustavodev.com.br`)"
-      - "traefik.http.routers.gogym-app.entrypoints=websecure"
-      - "traefik.http.routers.gogym-app.tls=true"
-      - "traefik.http.services.gogym-app.loadbalancer.server.port=8000"
+      - "traefik.http.routers.${ENV_PREFIX:-prod}-gogym-app.rule=Host(`${APP_DOMAIN:-api.gogym.ugustavodev.com.br}`)"
+      - "traefik.http.routers.${ENV_PREFIX:-prod}-gogym-app.entrypoints=websecure"
+      - "traefik.http.routers.${ENV_PREFIX:-prod}-gogym-app.tls=true"
+      - "traefik.http.services.${ENV_PREFIX:-prod}-gogym-app.loadbalancer.server.port=8000"
     environment:
       - SERVER_NAME=:8000
       - FRANKENPHP_CONFIG=worker ./public/index.php
@@ -23,12 +22,12 @@ services:
       - APP_URL=${APP_URL}
       - APP_FRONTEND_URL=${APP_FRONTEND_URL}
       - DB_CONNECTION=${DB_CONNECTION}
-      - DB_HOST=gogym_db
+      - DB_HOST=db
       - DB_PORT=${DB_PORT}
       - DB_DATABASE=${DB_DATABASE}
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
-      - REDIS_HOST=gogym_redis
+      - REDIS_HOST=redis
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_PORT=${REDIS_PORT}
       - QUEUE_CONNECTION=${QUEUE_CONNECTION}
@@ -58,7 +57,6 @@ services:
     build:
       context: ./back-end
       dockerfile: Dockerfile
-    container_name: gogym_queue
     environment:
       - APP_NAME=${APP_NAME}
       - APP_ENV=${APP_ENV}
@@ -66,12 +64,12 @@ services:
       - APP_DEBUG=${APP_DEBUG}
       - APP_URL=${APP_URL}
       - DB_CONNECTION=${DB_CONNECTION}
-      - DB_HOST=gogym_db
+      - DB_HOST=db
       - DB_PORT=${DB_PORT}
       - DB_DATABASE=${DB_DATABASE}
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
-      - REDIS_HOST=gogym_redis
+      - REDIS_HOST=redis
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_PORT=${REDIS_PORT}
       - QUEUE_CONNECTION=${QUEUE_CONNECTION}
@@ -95,7 +93,6 @@ services:
 
   db:
     image: mysql:8.0
-    container_name: gogym_db
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
@@ -109,22 +106,17 @@ services:
       timeout: 20s
       retries: 10
     networks:
-      gogym_network:
-        aliases:
-          - gogym_db
+      - gogym_network
 
   redis:
     image: redis:alpine
-    container_name: gogym_redis
     restart: unless-stopped
     ports:
       - "6379:6379"
     volumes:
       - gogym_redis_data:/data
     networks:
-      gogym_network:
-        aliases:
-          - gogym_redis
+      - gogym_network
 
 networks:
   gogym_network:
